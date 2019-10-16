@@ -89,10 +89,4 @@ theme: next
 # Deployment
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
-  - type: git
-    repo: https://github.com/Echo-Lynn/echo-lynn.github.io.git
-    branch: master
-    ignore_hidden: false
-
-include:
-  - .nojekyll
+  - type:
