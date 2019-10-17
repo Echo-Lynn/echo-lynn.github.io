@@ -19,6 +19,8 @@ categories:
 
 正文开始时，也就默认了有缘阅读到此文的同学均具备上述能力
 
+<!-- more -->
+
 # 创建基于typescript的项目
 Zeit在2019/07发布了Next.js 9 该版本最吸人眼球的两个Feature分别是 **Built-in Zero-Config TypeScript Support** 和 **File system-Based Dynamic Routing** 即**零配置内置TypeScript支持**和**基于文件系统的动态路由支持**，这里主要提及一下关于TypeScript的支持。在9.0之前的版本，Next.js从6.0开始通过一个名为 *@zeit/next-typescript* 提供了基础版本的TypeScript支持，但并没有整合类型检查，Next.js核心代码本身也不提供types类型所以这个版本提供的TypeScript支持并不友好。Zeit本次发布的Next.js 9 核心代码使用TypeScript重构，因此给开发体验带来了极致的提升。以下将使用官方提供的Demo *with-typescript* 作为种子项目，后面内容将在这个项目上进行集成
 
