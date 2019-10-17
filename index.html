@@ -43,8 +43,8 @@
       hits: {"per_page":10},
       labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
     },
-    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
-    path: '',
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
     motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
     translation: {
       copy_button: '复制',
@@ -212,11 +212,38 @@
   </li>
       
     
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger">
+          <i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+    
   </ul>
 
     
 
 </nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
 </div>
     </header>
 
@@ -279,7 +306,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-10-17 03:33:27" itemprop="dateModified" datetime="2019-10-17T03:33:27+00:00">2019-10-17</time>
+                <time title="修改时间：2019-10-17 07:37:24" itemprop="dateModified" datetime="2019-10-17T07:37:24+00:00">2019-10-17</time>
               </span>
             
           
@@ -313,6 +340,30 @@
           
 
           
+            <span id="/Programming/JavaScript/Next.js with TypeScript and Mobx/" class="post-meta-item leancloud_visitors" data-flag-title="Next.js with TypeScript and Mobx" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/Programming/JavaScript/Next.js with TypeScript and Mobx/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/Programming/JavaScript/Next.js with TypeScript and Mobx/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
 
         </div>
       </header>
@@ -333,181 +384,15 @@
 <li>有一定的前端工程化、自动化部署的经验</li>
 </ul>
 <p>正文开始时，也就默认了有缘阅读到此文的同学均具备上述能力</p>
-<h1 id="创建基于typescript的项目"><a href="#创建基于typescript的项目" class="headerlink" title="创建基于typescript的项目"></a>创建基于typescript的项目</h1><p>Zeit在2019/07发布了Next.js 9 该版本最吸人眼球的两个Feature分别是 <strong>Built-in Zero-Config TypeScript Support</strong> 和 <strong>File system-Based Dynamic Routing</strong> 即<strong>零配置内置TypeScript支持</strong>和<strong>基于文件系统的动态路由支持</strong>，这里主要提及一下关于TypeScript的支持。在9.0之前的版本，Next.js从6.0开始通过一个名为 <em>@zeit/next-typescript</em> 提供了基础版本的TypeScript支持，但并没有整合类型检查，Next.js核心代码本身也不提供types类型所以这个版本提供的TypeScript支持并不友好。Zeit本次发布的Next.js 9 核心代码使用TypeScript重构，因此给开发体验带来了极致的提升。以下将使用官方提供的Demo <em>with-typescript</em> 作为种子项目，后面内容将在这个项目上进行集成</p>
-<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">npx create-next-app --example with-typescript with-typescript-app</span><br><span class="line"><span class="comment"># or</span></span><br><span class="line">yarn create next-app --example with-typescript with-typescript-app</span><br></pre></td></tr></table></figure>
-
-<h2 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> with-typescript-app</span><br><span class="line">yarn dev</span><br></pre></td></tr></table></figure>
-
-<p>得到以下目录结构：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">with-typescript-app</span><br><span class="line">├─ .gitignore</span><br><span class="line">├─ README.md</span><br><span class="line">├─ components</span><br><span class="line">│  ├─ Layout.tsx</span><br><span class="line">│  ├─ List.tsx</span><br><span class="line">│  ├─ ListDetail.tsx</span><br><span class="line">│  └─ ListItem.tsx</span><br><span class="line">├─ interfaces</span><br><span class="line">│  └─ index.ts</span><br><span class="line">├─ next-env.d.ts</span><br><span class="line">├─ package.json</span><br><span class="line">├─ pages</span><br><span class="line">│  ├─ about.tsx</span><br><span class="line">│  ├─ detail.tsx</span><br><span class="line">│  ├─ index.tsx</span><br><span class="line">│  └─ initial-props.tsx</span><br><span class="line">├─ tsconfig.json</span><br><span class="line">├─ utils</span><br><span class="line">│  └─ sample-api.ts</span><br><span class="line">└─ yarn.lock</span><br></pre></td></tr></table></figure>
-
-<h1 id="使用mobx作为app状态管理方案"><a href="#使用mobx作为app状态管理方案" class="headerlink" title="使用mobx作为app状态管理方案"></a>使用mobx作为app状态管理方案</h1><p>有关Mobx的介绍请自行官网查阅：[<a href="https://mobx.js.org/]" target="_blank" rel="noopener">https://mobx.js.org/]</a></p>
-<h2 id="安装依赖"><a href="#安装依赖" class="headerlink" title="安装依赖"></a>安装依赖</h2><p>安装mobx、mobx-react模块：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">yarn add mobx mobx-react</span><br><span class="line">// or</span><br><span class="line">npm install --save mobx mobx-react</span><br></pre></td></tr></table></figure>
-
-<p>安装babel plugin对装饰器提供编译支持：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">yarn add -D @babel/plugin-proposal-class-properties @babel/plugin-proposal-decorators</span><br><span class="line">// or</span><br><span class="line">npm install --save-dev @babel/plugin-proposal-class-properties @babel/plugin-proposal-decorators</span><br></pre></td></tr></table></figure>
-
-<h2 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h2><p>创建一个.babelrc的文件在工程的根目录</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">touch .babelrc</span><br><span class="line">vi .babelrc</span><br></pre></td></tr></table></figure>
-
-<p>写入</p>
-<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"presets"</span>: [</span><br><span class="line">    <span class="string">"next/babel"</span></span><br><span class="line">  ],</span><br><span class="line">  <span class="attr">"plugins"</span>: [</span><br><span class="line">    [<span class="string">"@babel/plugin-proposal-decorators"</span>, &#123; <span class="attr">"legacy"</span>: <span class="literal">true</span> &#125;],</span><br><span class="line">    [<span class="string">"@babel/plugin-proposal-class-properties"</span>, &#123; <span class="attr">"loose"</span>: <span class="literal">true</span> &#125;]</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>并在tsconfig.json中加入一行配置来使ts支持装饰器语法：</p>
-<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"compilerOptions"</span>: &#123;</span><br><span class="line">    <span class="attr">"experimentalDecorators"</span>: <span class="literal">true</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="store子模块代码实现"><a href="#store子模块代码实现" class="headerlink" title="store子模块代码实现"></a>store子模块代码实现</h2><p>创建stores文件夹并创建user.ts：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkdir stores</span><br><span class="line">touch stores/user.ts</span><br></pre></td></tr></table></figure>
-
-<p>写入:</p>
-<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// user.ts</span></span><br><span class="line"><span class="keyword">import</span> &#123;action, observable&#125; <span class="keyword">from</span> <span class="string">'mobx'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="keyword">class</span> UserStore &#123;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@observable</span> name: <span class="built_in">string</span> = <span class="string">'Clint'</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">constructor</span> (<span class="params">initialState: <span class="built_in">any</span> = &#123;&#125;</span>) &#123;</span><br><span class="line">    <span class="keyword">this</span>.name = initialState.name;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@action</span> setName(name: <span class="built_in">string</span>) &#123;</span><br><span class="line">    <span class="keyword">this</span>.name = name</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>UserStore类中的构造函数的意义是：<strong>接受初始化数据来对该store下的状态进行初始化或者将在服务端渲染首屏时已经产生的状态同步到客户端（这里是同构直出中状态同步一个非常关键的环节，只有理解得足够透彻，Next.js才能用得得心应手</strong><br>由于每次创建一个这样的store子模块都需要实现一样的构造函数来对模块中的状态初始化或同步，我们可以通过编写一个基类，让所有store子模块继承这个基类来优化一下代码：<br>创建stores/base.ts，写入：</p>
-<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// base.ts</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="keyword">class</span> Base &#123;</span><br><span class="line">  [key: <span class="built_in">string</span>]: <span class="built_in">any</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">constructor</span>(<span class="params">initState: &#123; [key: <span class="built_in">string</span>]: <span class="built_in">any</span> &#125; = &#123;&#125;</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">const</span> k <span class="keyword">in</span> initState) &#123;</span><br><span class="line">      <span class="keyword">if</span> (initState.hasOwnProperty(k)) &#123;</span><br><span class="line">        <span class="keyword">this</span>[k] = initState[k]</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>修改user.ts:</p>
-<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// user.ts</span></span><br><span class="line"><span class="keyword">import</span> &#123;action, observable&#125; <span class="keyword">from</span> <span class="string">'mobx'</span></span><br><span class="line"><span class="keyword">import</span> Base <span class="keyword">from</span> <span class="string">'./base'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="keyword">class</span> UserStore <span class="keyword">extends</span> Base &#123;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@observable</span> name: <span class="built_in">string</span> = <span class="string">'Clint'</span></span><br><span class="line"></span><br><span class="line">  <span class="meta">@action</span> setName(name: <span class="built_in">string</span>) &#123;</span><br><span class="line">    <span class="keyword">this</span>.name = name</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>创建stores/config.ts，当有新的store子模块需要创建时候，只要通过这个配置文件引入子模块即可自动集成到根store中：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">touch stores/config.ts</span><br></pre></td></tr></table></figure>
-
-<p>写入：</p>
-<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> userStore <span class="keyword">from</span> <span class="string">'./user'</span></span><br><span class="line"><span class="keyword">import</span> Base <span class="keyword">from</span> <span class="string">'./base'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> config: &#123; [key: <span class="built_in">string</span>]: <span class="keyword">typeof</span> Base &#125; = &#123;</span><br><span class="line">  userStore</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> config</span><br></pre></td></tr></table></figure>
-
-<h2 id="mobx主体逻辑"><a href="#mobx主体逻辑" class="headerlink" title="mobx主体逻辑"></a>mobx主体逻辑</h2><p>优化了store子模块的代码以后，接下来实现store的主体逻辑，创建stores/index.ts：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">touch stores/index.ts</span><br></pre></td></tr></table></figure>
-
-<p>写入:</p>
-<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123;useStaticRendering&#125; <span class="keyword">from</span> <span class="string">'mobx-react'</span></span><br><span class="line"><span class="keyword">import</span> config <span class="keyword">from</span> <span class="string">'./config'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> isServer = <span class="keyword">typeof</span> <span class="built_in">window</span> === <span class="string">'undefined'</span></span><br><span class="line"><span class="comment">// Comment 1</span></span><br><span class="line">useStaticRendering(isServer)</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">class</span> Store &#123;</span><br><span class="line">  [key: <span class="built_in">string</span>]: <span class="built_in">any</span></span><br><span class="line">  <span class="comment">// Comment 2</span></span><br><span class="line">  <span class="keyword">constructor</span>(<span class="params">initialState: <span class="built_in">any</span> = &#123;&#125;</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">const</span> k <span class="keyword">in</span> config) &#123;</span><br><span class="line">      <span class="keyword">if</span> (config.hasOwnProperty(k)) &#123;</span><br><span class="line">        <span class="keyword">this</span>[k] = <span class="keyword">new</span> config[k](initialState[k])</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> store: <span class="built_in">any</span> = <span class="literal">null</span></span><br><span class="line"><span class="comment">// Comment 3</span></span><br><span class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">initializeStore</span>(<span class="params">initialState = &#123;&#125;</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (isServer) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> Store(initialState)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (store === <span class="literal">null</span>) &#123;</span><br><span class="line">    store = <span class="keyword">new</span> Store(initialState)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> store</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>代码注释：</p>
-<ol>
-<li>由于Next.js首屏渲染是在服务端执行的，Mobx所创建的状态是可观察的对象，使用Mobx创建的可观察对象会在内存中使用listener来监听对象的变化，但实际上在服务端是没有必要监听变化的，因为首屏渲染完成得到html文件后，后续的工作都由客户端接手，所以如果在服务端的对象是可观察的，将有可能造成内存泄漏，所以我们使用useStaticRendering方法，当该文件在服务端执行时，让Mobx创建静态的普通js对象即可</li>
-<li>构造函数将在Mobx的根store下挂载上文创建的子模块，并将接收到的初始状态/服务端透传的状态一一赋值给子模块，<strong>当赋值过程是服务端状态同步时，由于执行环境是客户端，子模块中的状态将重新获得可观察的属性，能够让使用了该状态值的react组件响应变化当赋值过程是服务端状态同步时，由于执行环境是客户端，子模块中的状态将重新获得可观察的属性，能够让使用了该状态值的react组件响应变化</strong></li>
-<li><em>initializeStore</em> 方法，服务端渲染时，每个独立的请求都将创建一个新的store，以此来隔离请求之间的状态混淆，当客户端渲染时，只需要引用之前已经创建过的store即可，因为同一个应用程序（SPA）应该共享一颗状态树<br>以上即Mobx状态管理的主逻辑实现，接下来将讲述Mobx如何配合Next.js和react实现状态管理<h2 id="mobx-react"><a href="#mobx-react" class="headerlink" title="mobx-react"></a>mobx-react</h2></li>
-</ol>
-<p>Mobx配合react实现状态管理可以引用mobx-react来实现，写代码之前我们先来分析一下需求，即希望达Mobx具备什么样能力。</p>
-<p>前文我们设计Mobx代码结构的时候，实现了一个store的子模块概念，那么第一个问题来了，<strong>能通过注入的方式，给页面按需加载我们所需要的store子模块吗？</strong></p>
-<p>另外，我们都已经知道，Next.js是通过一个实现一个名为<em>getInitialProps<em>的静态方法来做到当页面被首屏请求的时候，在服务端执行</em>getInitialProps<em>从而获取页面渲染所需的数据来做服务端渲染的，那么第二个问题：*</em>如何在 *getInitialProps</em> 中获取store对象？**</p>
-<p>第三，上文同样提到了，我们服务端首屏渲染的时候会产生一些初始状态存在store的某个或者某些子模块中，那么<strong>Next.js是通过什么手段将这些状态带给客户端的</strong> 而 <strong>我们又怎样才能让这些状态同步到客户端的store对象里来保持服务端客户端状态一致呢？</strong>这是第三和第四个问题。归纳一下需要解决的事务：</p>
-<ol>
-<li>向react组件注入store子模块</li>
-<li>在<em>getInitialProps</em>方法中使用store对象填充数据</li>
-<li>分析Next.js数据从服务端向客户端同步的机制</li>
-<li>同步服务端和客户端的store状态</li>
-</ol>
-<p>解决第一个问题我们需要重写Next.js的<em>_app.tsx</em>文件：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">touch pages/_app.tsx</span><br></pre></td></tr></table></figure>
-
-<p>写入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">// pages/_app.tsx</span><br><span class="line">import App, &#123;AppContext&#125; from &apos;next/app&apos;</span><br><span class="line">import React from &apos;react&apos;</span><br><span class="line">import &#123;initializeStore, Store&#125; from &apos;../stores&apos;</span><br><span class="line">import &#123;Provider&#125; from &apos;mobx-react&apos;</span><br><span class="line"></span><br><span class="line">class MyMobxApp extends App &#123;</span><br><span class="line"></span><br><span class="line">  mobxStore: Store</span><br><span class="line"></span><br><span class="line">  // Fetching serialized(JSON) store state</span><br><span class="line">  static async getInitialProps(appContext: AppContext): Promise&lt;any&gt; &#123;</span><br><span class="line">    const ctx: any = appContext.ctx</span><br><span class="line">    // Comment 1</span><br><span class="line">    ctx.mobxStore = initializeStore()</span><br><span class="line">    const appProps = await App.getInitialProps(appContext)</span><br><span class="line"></span><br><span class="line">    return &#123;</span><br><span class="line">      ...appProps,</span><br><span class="line">      initialMobxState: ctx.mobxStore</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  constructor(props: any) &#123;</span><br><span class="line">    super(props)</span><br><span class="line">    // Comment 2</span><br><span class="line">    const isServer = typeof window === &apos;undefined&apos;</span><br><span class="line">    this.mobxStore = isServer ? props.initialMobxState : initializeStore(props.initialMobxState)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  render() &#123;</span><br><span class="line">    const &#123;Component, pageProps&#125;: any = this.props</span><br><span class="line">    return (</span><br><span class="line">      // Comment 3</span><br><span class="line">      &lt;Provider &#123;...this.mobxStore&#125;&gt;</span><br><span class="line">        &lt;Component &#123;...pageProps&#125; /&gt;</span><br><span class="line">      &lt;/Provider&gt;</span><br><span class="line">    )</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">export default MyMobxApp</span><br></pre></td></tr></table></figure>
-
-<p>代码注释：</p>
-<ol>
-<li><p>创建（服务端）或获取（客户端）store对象命名为mobxStore，将mobxStore挂载到appContext.ctx对象上，这个对象会在页面的<em>getInitialProps</em>方法中作为入参传入，这就解决了上述的第二个问题</p>
-</li>
-<li><p>这里其实需要先解释一下Next.js同构直出的原理：<strong>当首屏被请求时，Next.js在服务端利用react渲染页面的机制（服务端渲染生命周期只会执行到render）渲染出html文件后，来满足SEO的需求和首屏页面的展示，然后返回给客户端（通常是浏览器），到了浏览器，Next.js则会跑一遍完整React的生命周期渲染，所以只要渲染结果一致，react内置的<em>diff</em>算法结果没有任何差异，你将不会看到页面有任何可察觉的变化</strong><br>Next.js通过什么方式来保证第二点提到的<strong>渲染结果一致</strong>呢？这就是我们要解决的第三个事务。Next.js服务端渲染html文件的同时，将本次请求产生的有关数据通过写入script标签的方式插在html文件一并返回。起一下本地服务，我们使用Chrome控制台看一下实际数据</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yarn dev</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;script id=<span class="string">"__NEXT_DATA__"</span> type=<span class="string">"application/json"</span>&gt;</span><br><span class="line">  &#123;<span class="string">"dataManager"</span>:<span class="string">"[]"</span>,<span class="string">"props"</span>:&#123;<span class="string">"pageProps"</span>:&#123;&#125;,<span class="string">"initialMobxState"</span>:&#123;<span class="string">"userStore"</span>:&#123;&#125;&#125;&#125;,<span class="string">"page"</span>:<span class="string">"/"</span>,<span class="string">"query"</span>:&#123;&#125;,<span class="string">"buildId"</span>:<span class="string">"development"</span>&#125;</span><br><span class="line">&lt;<span class="regexp">/script&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>就是以这种方式，<strong>Next.js运行在客户端时会依据服务端带回的<em><strong>NEXT_DATA</strong></em>构建React SPA</strong>，这就是同构直出的核心原理。</p>
-<p>从上面得到的数据，我们不难发现<em>initialMobxState</em>被带回，这时，回过头来看下<em>pages/_app.tsx</em>中的一段代码：</p>
-<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">constructor</span>(<span class="params">props: <span class="built_in">any</span></span>) &#123;</span><br><span class="line">    <span class="keyword">super</span>(props)</span><br><span class="line">    <span class="keyword">const</span> isServer = <span class="keyword">typeof</span> <span class="built_in">window</span> === <span class="string">'undefined'</span></span><br><span class="line">    <span class="keyword">this</span>.mobxStore = isServer ? props.initialMobxState : initializeStore(props.initialMobxState)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-
-<p>在构造函数的执行环境为客户端时，store对象会依据<em><strong>NEXT_DATA</strong></em>中的<em>props.initialMobxState</em>被创建，这就完成了服务端store的状态向客户端同步，这就解决了事务4</p>
-</li>
-</ol>
-<ol start="3">
-<li><p>将store使用拓展运算符将子模块通过props注入到<em>provider</em>组件，配合mobx-react提供的<em>inject</em>方法来达到按需获取store模块的功能，下面给出一种用法代码示例，更多使用方式请移步mobx-react[<a href="https://github.com/mobxjs/mobx-react]" target="_blank" rel="noopener">https://github.com/mobxjs/mobx-react]</a> 了解更多</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line">// pages/detail.tsx</span><br><span class="line">import * as React from &apos;react&apos;</span><br><span class="line">import Layout from &apos;../components/Layout&apos;</span><br><span class="line">import &#123;User&#125; from &apos;../interfaces&apos;</span><br><span class="line">import &#123;findData&#125; from &apos;../utils/sample-api&apos;</span><br><span class="line">import ListDetail from &apos;../components/ListDetail&apos;</span><br><span class="line">import &#123;inject, observer&#125; from &apos;mobx-react&apos;</span><br><span class="line">import UserStore from &apos;../stores/user&apos;</span><br><span class="line"></span><br><span class="line">type Props = &#123;</span><br><span class="line">  item?: User</span><br><span class="line">  userStore: UserStore</span><br><span class="line">  errors?: string</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">@inject(&apos;userStore&apos;)</span><br><span class="line">@observer</span><br><span class="line">class InitialPropsDetail extends React.Component&lt;Props&gt; &#123;</span><br><span class="line">  static getInitialProps = async (&#123;query, mobxStore&#125;: any) =&gt; &#123;</span><br><span class="line">    mobxStore.userStore.setName(&apos;set by server&apos;)</span><br><span class="line">    try &#123;</span><br><span class="line">      const &#123;id&#125; = query</span><br><span class="line">      const item = await findData(Array.isArray(id) ? id[0] : id)</span><br><span class="line">      return &#123;item&#125;</span><br><span class="line">    &#125; catch (err) &#123;</span><br><span class="line">      return &#123;errors: err.message&#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  render() &#123;</span><br><span class="line">    const &#123;item, errors&#125; = this.props</span><br><span class="line"></span><br><span class="line">    if (errors) &#123;</span><br><span class="line">      return (</span><br><span class="line">        &lt;Layout title=&#123;`Error | Next.js + TypeScript Example`&#125;&gt;</span><br><span class="line">          &lt;p&gt;</span><br><span class="line">            &lt;span style=&#123;&#123;color: &apos;red&apos;&#125;&#125;&gt;Error:&lt;/span&gt; &#123;errors&#125;</span><br><span class="line">          &lt;/p&gt;</span><br><span class="line">        &lt;/Layout&gt;</span><br><span class="line">      )</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return (</span><br><span class="line">      &lt;Layout</span><br><span class="line">        title=&#123;`$&#123;item ? item.name : &apos;Detail&apos;&#125; | Next.js + TypeScript Example`&#125;</span><br><span class="line">      &gt;</span><br><span class="line">        &#123;item &amp;&amp; &lt;ListDetail item=&#123;item&#125;/&gt;&#125;</span><br><span class="line">        &lt;p&gt;</span><br><span class="line">          Name: &#123;this.props.userStore.name&#125;</span><br><span class="line">        &lt;/p&gt;</span><br><span class="line">        &lt;button onClick=&#123;() =&gt; &#123;</span><br><span class="line">          this.props.userStore.setName(&apos;set by client&apos;)</span><br><span class="line">        &#125;&#125;&gt;click to set name</span><br><span class="line">        &lt;/button&gt;</span><br><span class="line">      &lt;/Layout&gt;</span><br><span class="line">    )</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">export default InitialPropsDetail</span><br></pre></td></tr></table></figure>
-
-<p>访问: [<a href="http://localhost:3000/detail?id=101]" target="_blank" rel="noopener">http://localhost:3000/detail?id=101]</a> 查看效果</p>
-</li>
-</ol>
-<p>以上，就是基于Next.js开发的几个比较核心的思想和库的使用，下面开始介绍在构建和部署方面的内容</p>
-<h1 id="构建编译"><a href="#构建编译" class="headerlink" title="构建编译"></a>构建编译</h1><p>Next.js使用webpack来构建打包项目，当项目不需要特殊的定制化构建的时候，执行以下命令即可构建项目包</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">next build</span><br></pre></td></tr></table></figure>
-
-<p>在前言里也提到，本文着重讲部署Next.js的完整实例，那么只以默认方式构建项目显然是满足不了我们的实际的生产诉求了，我会在这里讲一些平常我们构建项目所需要的几个比较通用的需求点，当然覆盖不了所有，不过也可以提供一些思路。</p>
-<p>在这里，也顺便一提，当我们使用一个框架来搭建应用的时候，<strong>能使用框架本身提供的API实现功能请尽量使用</strong>，这样做的好处有哪些：</p>
-<ol>
-<li>避免重复造轮子</li>
-<li>自然形成一套规范和标准，团队开发减少学习成本</li>
-<li>文档现成，使用起来水到渠成</li>
-<li>项目里越少带有主观偏好的代码越好</li>
-</ol>
-<h2 id="环境分割"><a href="#环境分割" class="headerlink" title="环境分割"></a>环境分割</h2><p>一个生产项目避免不了环境这个问题，比较常见的项目环境分为dev test production，即开发、测试、生产，下面我们以这类环境划分为例，多几种或者少几种同理可推</p>
-<p>通常我们将项目内引用到的环境变量抽离出来，用配置文件把变量存起来，根据程序运行的环境来索引对应的配置文件，取出变量使用</p>
-<p>在根目录下创建<em>/config</em>目录，分别创建<em>dev.js，test.js，prod.js</em>（提一下，这里为什么不是.ts文件呢，因为这个配置文件，构建时候被引用的文件，是不经过ts编译的）<em>index.js</em>项目根目录下执行：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkdir config</span><br><span class="line">touch config/dev.js config/test.js config/prod.js config/index.js</span><br></pre></td></tr></table></figure>
-
-<p>分别写入：</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// config/dev.js</span></span><br><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  env: <span class="string">'dev'</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// config/test.js</span></span><br><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  env: <span class="string">'test'</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// config/prod.js</span></span><br><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  env: <span class="string">'prod'</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// config/index.js</span></span><br><span class="line"><span class="keyword">const</span> dev = <span class="built_in">require</span>(<span class="string">'./dev'</span>)</span><br><span class="line"><span class="keyword">const</span> test = <span class="built_in">require</span>(<span class="string">'./test'</span>)</span><br><span class="line"><span class="keyword">const</span> prod = <span class="built_in">require</span>(<span class="string">'./prod'</span>)</span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  dev,</span><br><span class="line">  test,</span><br><span class="line">  prod</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>Next.js构建(<code>next build</code>)和启动应用(<code>next</code>、<code>next start</code>)通过在根目录下<em>next.config.js</em>文件读取定制化的配置选项，当文件不存在时，使用默认配置构建</p>
-<p>创建<em>next.config.js</em></p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">touch next.config.js</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// next.config.js</span></span><br><span class="line"><span class="keyword">const</span> config = <span class="built_in">require</span>(<span class="string">'./config'</span>)</span><br><span class="line"><span class="comment">// Get process DEPLOY_ENV value</span></span><br><span class="line"><span class="keyword">const</span> DEPLOY_ENV = process.env.DEPLOY_ENV || <span class="string">'dev'</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  serverRuntimeConfig: &#123;</span><br><span class="line">    <span class="comment">// Will only be available on the server side</span></span><br><span class="line">    secret: <span class="string">'secret'</span>,</span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="comment">// Use which config file according to DEPLOY_ENV</span></span><br><span class="line">  publicRuntimeConfig: config[DEPLOY_ENV]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>修改<em>pages/index.tsx</em>文件：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">// pages/index.tsx</span><br><span class="line">import * as React from &apos;react&apos;</span><br><span class="line">import Link from &apos;next/link&apos;</span><br><span class="line">import Layout from &apos;../components/Layout&apos;</span><br><span class="line">import &#123; NextPage &#125; from &apos;next&apos;</span><br><span class="line">import getConfig from &apos;next/config&apos;</span><br><span class="line"></span><br><span class="line">const &#123;publicRuntimeConfig, serverRuntimeConfig&#125; = getConfig()</span><br><span class="line"></span><br><span class="line">const IndexPage: NextPage = () =&gt; &#123;</span><br><span class="line">  return (</span><br><span class="line">    &lt;Layout title=&quot;Home | Next.js + TypeScript Example&quot;&gt;</span><br><span class="line">      &lt;h1&gt;Hello Next.js 👋&lt;/h1&gt;</span><br><span class="line">      &lt;p&gt;Public config JSON string: &#123;JSON.stringify(publicRuntimeConfig)&#125;&lt;/p&gt;</span><br><span class="line">      &lt;p&gt;Server side config JSON string: &#123;JSON.stringify(serverRuntimeConfig)&#125;&lt;/p&gt;</span><br><span class="line">      &lt;p&gt;</span><br><span class="line">        &lt;Link href=&quot;/about&quot;&gt;</span><br><span class="line">          &lt;a&gt;About&lt;/a&gt;</span><br><span class="line">        &lt;/Link&gt;</span><br><span class="line">      &lt;/p&gt;</span><br><span class="line">    &lt;/Layout&gt;</span><br><span class="line">  )</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">export default IndexPage</span><br></pre></td></tr></table></figure>
-
-<p>Next.js配置文件中，有两个配置选项<em>serverRuntimeConfig</em>，<em>publicRuntimeConfig</em>，<em>serverRuntimeConfig</em>只允许程序运行在服务端时使用，<em>publicRuntimeConfig</em>选项同时允许服务端和客户端获取，我用<em>publicRuntimeConfig</em>讲解思路</p>
-<p>完成以上代码编写后，执行命令</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">next</span><br></pre></td></tr></table></figure>
-
-<p>使用浏览器打开 [<a href="http://localhost:3000]查看效果" target="_blank" rel="noopener">http://localhost:3000]查看效果</a></p>
-<p>可以注意到浏览器显示了<em>publicRuntimeConfig</em>是<em>config/dev.js</em>的内容，而<em>serverRuntimeConfig</em>为空对象，细心的朋友会注意到，当你快速不断刷新页面的时候，是可以看到<em>serverRuntimeConfig</em>是由<code>{&quot;secret&quot;:  &quot;secret&quot;}</code>变为<code>{}</code>的，为什么会这样，结合上文提到的Next.js同构直出的核心思想和关于<em>serverRuntimeConfig</em>的特性就可以理解该现象了。</p>
-<p>那么，现在我们要解决的问题就是，让程序构建后跑在test/prod环境时候，页面显示<em>config/test.js</em>或者<em>config/prod.js</em>的内容了</p>
-<p>以test为例，Next.js的构建命令为<code>next build</code>，启动命令为<code>next start</code>，运行和构建都会根据<em>next.config.js</em>来决定应用构建和启动的定制化配置，从代码里可以看到，我们是根据一个叫<em>DEPLOY_ENV</em>的环境变量来索引配置文件的，那么我们只需要在运行<code>next build</code>和<code>next start</code>的时候给<em>DEPLOY_ENV</em>赋值即可</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">DEPLOY_ENV=<span class="built_in">test</span> next build</span><br><span class="line">DEPLOY_ENV=<span class="built_in">test</span> next start</span><br></pre></td></tr></table></figure>
-
-<p>执行完上述命令，打开[<a href="http://localhost:3000]查看页面是否已显示*config/test.js*的内容，有关环境分割的内容就讲到这里，更多有关环境的拓展可以依据这样的思路来实现" target="_blank" rel="noopener">http://localhost:3000]查看页面是否已显示*config/test.js*的内容，有关环境分割的内容就讲到这里，更多有关环境的拓展可以依据这样的思路来实现</a></p>
-<h2 id="CSS预编译"><a href="#CSS预编译" class="headerlink" title="CSS预编译"></a>CSS预编译</h2><p>这个就更加简单了，官方提供插件的，我就不费口舌讲一遍了，直接上链接</p>
-<p>值得一提是的，Next.js在CSS方面有一点不足：<strong>所有的样式文件最终会被打包为一个<em>style.chunk.css</em>文件随着首屏加载一并返回</strong>。这会带来一点小小的缺陷就是当你的app工程庞大时，这个文件的体积会对首屏的加载带来一点影响，虽然在gzip压缩后这种影响微乎其微，不过终归是需要优化，另外一个问题就是，类名冲突了，你可能需要利用像Less、Sass这样的嵌套样式写法把不相关的页面样式包裹在一个命名空间里，或者是通过配置<code>{cssModules: true}</code>来为你的类名打上hash后缀。</p>
-<p>关于CSS文件切割的问题笔者已经给Next.js作者提了issue了，期待后续版本的解决方案。</p>
-<p>动手能力强webpack原理够硬的同学也可以尝试自己实现一下这个功能。笔者后面空下来有幸实现了的话，会再分享出来。</p>
-<h1 id="服务部署"><a href="#服务部署" class="headerlink" title="服务部署"></a>服务部署</h1><p>Next.js不同于普通的静态web项目，当然，Next.js也可以搭建一个普通的静态项目，不过同构直出才是它的最大亮点，所以本文所有篇幅都是基于这个点出发的，不讨论其他小众方式运行Next.js</p>
-<p>那么想部署同构直出，就需要有web服务器，前端领域目前比较热门的还是Node.js，Next.js的服务端也正是运行在Node.js上，下面介绍一下Next.js简单的部署方案，然后继续针对一些我认为出现频繁的一些场景讲解一下部署思路。</p>
-<p>部署项目可以有两种方式：</p>
-<p>一是把整个项目目录除了<em>node_modules</em>（当然你也可以把这个目录带上去，如果你连接服务端传输网速够快的话）以外的源文件一并上传到服务器，安装项目依赖</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">yarn</span><br><span class="line">// or</span><br><span class="line">npm install</span><br></pre></td></tr></table></figure>
-
-<p>构建</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">DEPLOY_ENV=<span class="variable">$YOUR_SERVER_ENV_TYPE</span> next build</span><br></pre></td></tr></table></figure>
-
-<p>启动服务</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">DEPLOY_ENV=<span class="variable">$YOUR_SERVER_ENV_TYPE</span> next start</span><br></pre></td></tr></table></figure>
-
-<p>二是你在本地或者使用 <a href="https://docs.gitlab.com/runner/" target="_blank" rel="noopener">Docs Gitlab Com Runner</a> (推荐使用，具体操作自行查阅文档)</p>
-<p>构建后把所需要的资源上传到服务器，列一下所需要的目录清单</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">app</span><br><span class="line">├─ .next // required</span><br><span class="line">├─ pages // just empty dir, <span class="keyword">for</span> safe</span><br><span class="line">├─ next.config.js // <span class="keyword">if</span> have</span><br><span class="line">├─ server.js // <span class="keyword">if</span> have</span><br><span class="line">├─ static // <span class="keyword">if</span> have</span><br><span class="line">├─ config // Mentioned above, <span class="keyword">if</span> have</span><br><span class="line">├─ package.json // required</span><br><span class="line">├─ package-lock.json // optional</span><br><span class="line">└─ yarn.lock // optional</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li><code>.next</code>：<code>next build</code>执行后编译完成的文件目录</li>
-<li><code>pages</code>：建议传一个空目录。按理来说不需要，因为里面的源文件已经被打包到<em>.next</em>目录去了，但由于最近在部署的时候遇到一个报错提示说找不到pages，弄了一个空目录就正常运行了。emm…晚点去提个issue</li>
-<li><code>next.config.js</code>：如果你有定制化配置的话</li>
-<li><code>server.js</code>：如果你有定制化node服务的话</li>
-<li><code>static</code>: 静态资源目录，由自己创建，Next.js编译会忽略这个目录，如果你app有引用这个目录的静态资源，需要带上</li>
-<li><code>config</code>：前文提到的，如果你按照本文做的环境分割的话</li>
-<li><code>package.json</code>：在服务器需要Next.js等的npm模块来启动服务，所以需要这个文件来安装依赖</li>
-<li><code>package-lock.json</code>：不解释了</li>
-<li><code>yarn.lock</code>：不解释了</li>
-</ul>
-<p>完成传输后，运行</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">yarn</span><br><span class="line">// or</span><br><span class="line">npm install</span><br><span class="line">// no build <span class="built_in">command</span> needed</span><br><span class="line">DEPLOY_ENV=<span class="variable">$YOUR_SERVER_ENV_TYPE</span> next start</span><br></pre></td></tr></table></figure>
-
-<h2 id="部署路径"><a href="#部署路径" class="headerlink" title="部署路径"></a>部署路径</h2><p>众所周知，Next.js默认是通过文件系统路由的（<em>file-system routing*）。假设你项目部署的域名是 <a href="http://www.myapp.com" target="_blank" rel="noopener">www.myapp.com</a> ，你要访问</em>/pages<em>目录下的</em>home.tsx*，则访问的url为 <a href="http://www.myapp.com/home" target="_blank" rel="noopener">http://www.myapp.com/home</a> ，通常这样是能够满足大部分的业务场景的，这一章我想要讲的，就是比较可能出现的另外一种业务场景，即单个域名下部署多个项目，不仅仅是Next.js项目，也有可能是Vue、React、Angular、JQuery等其他类型的web项目<br>// TODO 未完待续</p>
-
+          <!--noindex-->
+          
+            <div class="post-button">
+              <a class="btn" href="/Programming/JavaScript/Next.js with TypeScript and Mobx/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
         
       
     </div>
@@ -664,6 +549,7 @@
 
 
 
+  <script src="/js/local-search.js?v=7.4.1"></script>
 
 
 
@@ -676,12 +562,40 @@
 
 
 
+
+
+  
 
   
 
   
 
-  
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: true,
+    notify: false,
+    appId: 'mp5VWR22FVbxptY02BSSuWx3-9Nh9j0Va',
+    appKey: 'PeELbF0haXyi8VEMYzNIv6U0',
+    placeholder: "给作者留言并留下您的邮箱，作者稍后将会给您答复...",
+    avatar: 'mm',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: true,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
 
 </body>
 </html>
