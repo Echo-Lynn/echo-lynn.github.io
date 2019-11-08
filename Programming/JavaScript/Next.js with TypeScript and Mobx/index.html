@@ -63,7 +63,7 @@
 <meta property="og:site_name" content="Echo Lynn&#39;s Blog">
 <meta property="og:description" content="前言有关Next.js、同构直出、SEO、SPA等相关介绍将不再赘述，本文主要针对Next.js配合typescript和mobx搭建一个完整的生产部署的前端工程进行核心代码的分析以及主要坑点的讲解，非Next.js入门课程，下面我将会列出本教程所需要的前置预备知识和能力：  nodejs服务端编程基础 已至少阅读一遍Next.js官方文档 熟练使用reactjs 熟练使用webpack 理解同构">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-11-08T10:24:29.073Z">
+<meta property="og:updated_time" content="2019-11-08T11:24:10.284Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Next.js部署web同构直出应用全指南（Mobx + Typescript）">
 <meta name="twitter:description" content="前言有关Next.js、同构直出、SEO、SPA等相关介绍将不再赘述，本文主要针对Next.js配合typescript和mobx搭建一个完整的生产部署的前端工程进行核心代码的分析以及主要坑点的讲解，非Next.js入门课程，下面我将会列出本教程所需要的前置预备知识和能力：  nodejs服务端编程基础 已至少阅读一遍Next.js官方文档 熟练使用reactjs 熟练使用webpack 理解同构">
@@ -311,7 +311,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-11-08 10:24:29" itemprop="dateModified" datetime="2019-11-08T10:24:29+00:00">2019-11-08</time>
+                <time title="修改时间：2019-11-08 11:24:10" itemprop="dateModified" datetime="2019-11-08T11:24:10+00:00">2019-11-08</time>
               </span>
             
           
@@ -444,7 +444,7 @@
 <p>代码注释：</p>
 <ol>
 <li>由于Next.js首屏渲染是在服务端执行的，Mobx所创建的状态是可观察的对象，使用Mobx创建的可观察对象会在内存中使用listener来监听对象的变化，但实际上在服务端是没有必要监听变化的，因为首屏渲染完成得到html文件后，后续的工作都由客户端接手，所以如果在服务端的对象是可观察的，将有可能造成内存泄漏，所以我们使用useStaticRendering方法，当该文件在服务端执行时，让Mobx创建静态的普通js对象即可</li>
-<li>构造函数将在Mobx的根store下挂载上文创建的子模块，并将接收到的初始状态/服务端透传的状态一一赋值给子模块，<strong>当赋值过程是服务端状态同步时，由于执行环境是客户端，子模块中的状态将重新获得可观察的属性，能够让使用了该状态值的react组件响应变化当赋值过程是服务端状态同步时，由于执行环境是客户端，子模块中的状态将重新获得可观察的属性，能够让使用了该状态值的react组件响应变化</strong></li>
+<li>构造函数将在Mobx的根store下挂载上文创建的子模块，并将接收到的初始状态/服务端透传的状态一一赋值给子模块，<strong>当赋值过程是服务端状态同步时，由于执行环境是客户端，子模块中的状态将重新获得可观察的属性，能够让使用了该状态值的react组件响应变化</strong></li>
 <li><em>initializeStore</em> 方法，服务端渲染时，每个独立的请求都将创建一个新的store，以此来隔离请求之间的状态混淆，当客户端渲染时，只需要引用之前已经创建过的store即可，因为同一个应用程序（SPA）应该共享一颗状态树<br>以上即Mobx状态管理的主逻辑实现，接下来将讲述Mobx如何配合Next.js和react实现状态管理<h2 id="mobx-react"><a href="#mobx-react" class="headerlink" title="mobx-react"></a>mobx-react</h2></li>
 </ol>
 <p>Mobx配合react实现状态管理可以引用mobx-react来实现，写代码之前我们先来分析一下需求，即希望达Mobx具备什么样能力。</p>
