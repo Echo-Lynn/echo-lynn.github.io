@@ -1,5 +1,5 @@
 ---
-title: Next.js with TypeScript and Mobx
+title: Next.js部署web同构直出应用全指南（Mobx + Typescript）
 date: 2019-10-16 14:36:40
 categories:
 - Programming
@@ -18,6 +18,10 @@ categories:
 - 有一定的前端工程化、自动化部署的经验
 
 正文开始时，也就默认了有缘阅读到此文的同学均具备上述能力
+
+原文地址：[**Echo Lynn's Blog**](https://echo-lynn.github.io/Programming/JavaScript/Next.js%20with%20TypeScript%20and%20Mobx/)
+
+作者将在原文上持续分享关于Next.js的高级拓展经验，有兴趣的朋友也可以在博客上留言你遇到的问题或者与作者交流
 
 <!-- more -->
 
@@ -627,4 +631,7 @@ DEPLOY_ENV=$YOUR_SERVER_ENV_TYPE next start
 ## 部署路径
 
 众所周知，Next.js默认是通过文件系统路由的（*file-system routing*）。假设你项目部署的域名是 www.myapp.com ，你要访问*/pages*目录下的*home.tsx*，则访问的url为 http://www.myapp.com/home ，通常这样是能够满足大部分的业务场景的，这一章我想要讲的，就是比较可能出现的另外一种业务场景，即单个域名下部署多个项目，不仅仅是Next.js项目，也有可能是Vue、React、Angular、JQuery等其他类型的web项目
-// TODO 未完待续
+
+......
+
+原文链接持续更新：[**Echo Lynn's Blog**](https://echo-lynn.github.io/Programming/JavaScript/Next.js%20with%20TypeScript%20and%20Mobx/)
