@@ -58,14 +58,14 @@
   <meta name="description" content="前言有关Next.js、同构直出、SEO、SPA等相关介绍将不再赘述，本文主要针对Next.js配合typescript和mobx搭建一个完整的生产部署的前端工程进行核心代码的分析以及主要坑点的讲解，非Next.js入门课程，下面我将会列出本教程所需要的前置预备知识和能力：  nodejs服务端编程基础 已至少阅读一遍Next.js官方文档 熟练使用reactjs 熟练使用webpack 理解同构">
 <meta name="keywords" content="Web JavaScript Front-end Node.js React.js Vue.js Next.js">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Next.js with TypeScript and Mobx">
+<meta property="og:title" content="Next.js部署web同构直出应用全指南（Mobx + Typescript）">
 <meta property="og:url" content="http://yoursite.com/Programming/JavaScript/Next.js with TypeScript and Mobx/index.html">
 <meta property="og:site_name" content="Echo Lynn&#39;s Blog">
 <meta property="og:description" content="前言有关Next.js、同构直出、SEO、SPA等相关介绍将不再赘述，本文主要针对Next.js配合typescript和mobx搭建一个完整的生产部署的前端工程进行核心代码的分析以及主要坑点的讲解，非Next.js入门课程，下面我将会列出本教程所需要的前置预备知识和能力：  nodejs服务端编程基础 已至少阅读一遍Next.js官方文档 熟练使用reactjs 熟练使用webpack 理解同构">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-10-23T03:09:47.593Z">
+<meta property="og:updated_time" content="2019-11-08T10:24:29.073Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Next.js with TypeScript and Mobx">
+<meta name="twitter:title" content="Next.js部署web同构直出应用全指南（Mobx + Typescript）">
 <meta name="twitter:description" content="前言有关Next.js、同构直出、SEO、SPA等相关介绍将不再赘述，本文主要针对Next.js配合typescript和mobx搭建一个完整的生产部署的前端工程进行核心代码的分析以及主要坑点的讲解，非Next.js入门课程，下面我将会列出本教程所需要的前置预备知识和能力：  nodejs服务端编程基础 已至少阅读一遍Next.js官方文档 熟练使用reactjs 熟练使用webpack 理解同构">
   <link rel="canonical" href="http://yoursite.com/Programming/JavaScript/Next.js with TypeScript and Mobx/">
 
@@ -81,7 +81,7 @@
   };
 </script>
 
-  <title>Next.js with TypeScript and Mobx | Echo Lynn's Blog</title>
+  <title>Next.js部署web同构直出应用全指南（Mobx + Typescript） | Echo Lynn's Blog</title>
   
 
 
@@ -283,7 +283,7 @@
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
           
-            Next.js with TypeScript and Mobx
+            Next.js部署web同构直出应用全指南（Mobx + Typescript）
             
 
           
@@ -311,7 +311,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-10-23 03:09:47" itemprop="dateModified" datetime="2019-10-23T03:09:47+00:00">2019-10-23</time>
+                <time title="修改时间：2019-11-08 10:24:29" itemprop="dateModified" datetime="2019-11-08T10:24:29+00:00">2019-11-08</time>
               </span>
             
           
@@ -345,7 +345,7 @@
           
 
           
-            <span id="/Programming/JavaScript/Next.js with TypeScript and Mobx/" class="post-meta-item leancloud_visitors" data-flag-title="Next.js with TypeScript and Mobx" title="阅读次数">
+            <span id="/Programming/JavaScript/Next.js with TypeScript and Mobx/" class="post-meta-item leancloud_visitors" data-flag-title="Next.js部署web同构直出应用全指南（Mobx + Typescript）" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -389,6 +389,8 @@
 <li>有一定的前端工程化、自动化部署的经验</li>
 </ul>
 <p>正文开始时，也就默认了有缘阅读到此文的同学均具备上述能力</p>
+<p>原文地址：<a href="https://echo-lynn.github.io/Programming/JavaScript/Next.js%20with%20TypeScript%20and%20Mobx/" target="_blank" rel="noopener"><strong>Echo Lynn’s Blog</strong></a></p>
+<p>作者将在原文上持续分享关于Next.js的高级拓展经验，有兴趣的朋友也可以在博客上留言你遇到的问题或者与作者交流</p>
 <a id="more"></a>
 
 <h1 id="创建基于typescript的项目"><a href="#创建基于typescript的项目" class="headerlink" title="创建基于typescript的项目"></a>创建基于typescript的项目</h1><p>Zeit在2019/07发布了Next.js 9 该版本最吸人眼球的两个Feature分别是 <strong>Built-in Zero-Config TypeScript Support</strong> 和 <strong>File system-Based Dynamic Routing</strong> 即<strong>零配置内置TypeScript支持</strong>和<strong>基于文件系统的动态路由支持</strong>，这里主要提及一下关于TypeScript的支持。在9.0之前的版本，Next.js从6.0开始通过一个名为 <em>@zeit/next-typescript</em> 提供了基础版本的TypeScript支持，但并没有整合类型检查，Next.js核心代码本身也不提供types类型所以这个版本提供的TypeScript支持并不友好。Zeit本次发布的Next.js 9 核心代码使用TypeScript重构，因此给开发体验带来了极致的提升。以下将使用官方提供的Demo <em>with-typescript</em> 作为种子项目，后面内容将在这个项目上进行集成</p>
@@ -564,7 +566,9 @@
 <p>完成传输后，运行</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">yarn</span><br><span class="line">// or</span><br><span class="line">npm install</span><br><span class="line">// no build <span class="built_in">command</span> needed</span><br><span class="line">DEPLOY_ENV=<span class="variable">$YOUR_SERVER_ENV_TYPE</span> next start</span><br></pre></td></tr></table></figure>
 
-<h2 id="部署路径"><a href="#部署路径" class="headerlink" title="部署路径"></a>部署路径</h2><p>众所周知，Next.js默认是通过文件系统路由的（<em>file-system routing*）。假设你项目部署的域名是 <a href="http://www.myapp.com" target="_blank" rel="noopener">www.myapp.com</a> ，你要访问</em>/pages<em>目录下的</em>home.tsx*，则访问的url为 <a href="http://www.myapp.com/home" target="_blank" rel="noopener">http://www.myapp.com/home</a> ，通常这样是能够满足大部分的业务场景的，这一章我想要讲的，就是比较可能出现的另外一种业务场景，即单个域名下部署多个项目，不仅仅是Next.js项目，也有可能是Vue、React、Angular、JQuery等其他类型的web项目<br>// TODO 未完待续</p>
+<h2 id="部署路径"><a href="#部署路径" class="headerlink" title="部署路径"></a>部署路径</h2><p>众所周知，Next.js默认是通过文件系统路由的（<em>file-system routing*）。假设你项目部署的域名是 <a href="http://www.myapp.com" target="_blank" rel="noopener">www.myapp.com</a> ，你要访问</em>/pages<em>目录下的</em>home.tsx*，则访问的url为 <a href="http://www.myapp.com/home" target="_blank" rel="noopener">http://www.myapp.com/home</a> ，通常这样是能够满足大部分的业务场景的，这一章我想要讲的，就是比较可能出现的另外一种业务场景，即单个域名下部署多个项目，不仅仅是Next.js项目，也有可能是Vue、React、Angular、JQuery等其他类型的web项目</p>
+<p>……</p>
+<p>原文链接持续更新：<a href="https://echo-lynn.github.io/Programming/JavaScript/Next.js%20with%20TypeScript%20and%20Mobx/" target="_blank" rel="noopener"><strong>Echo Lynn’s Blog</strong></a></p>
 
     </div>
 
