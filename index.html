@@ -183,7 +183,7 @@
       
     
 
-    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类<span class="badge">4</span></a>
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类<span class="badge">6</span></a>
 
   </li>
       
@@ -207,7 +207,7 @@
       
     
 
-    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档<span class="badge">2</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档<span class="badge">3</span></a>
 
   </li>
       
@@ -265,6 +265,156 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/Deployment/Automated-deployment/Automated deployment/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Echo Lynn">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Echo Lynn's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            
+            <a href="/Deployment/Automated-deployment/Automated deployment/" class="post-title-link" itemprop="url">Github + Travis CI + PM2实现 Next.js 项目的（其他 Node.js 项目同理）持续集成和自动化部署</a>
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-12-14 13:15:00" itemprop="dateCreated datePublished" datetime="2019-12-14T13:15:00+00:00">2019-12-14</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-12-15 09:19:01" itemprop="dateModified" datetime="2019-12-15T09:19:01+00:00">2019-12-15</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Deployment/" itemprop="url" rel="index">
+                    <span itemprop="name">Deployment</span>
+                  </a>
+                </span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Deployment/Automated-deployment/" itemprop="url" rel="index">
+                    <span itemprop="name">Automated deployment</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            <span id="/Deployment/Automated-deployment/Automated deployment/" class="post-meta-item leancloud_visitors" data-flag-title="Github + Travis CI + PM2实现 Next.js 项目的（其他 Node.js 项目同理）持续集成和自动化部署" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/Deployment/Automated-deployment/Automated deployment/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/Deployment/Automated-deployment/Automated deployment/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>本文将详细介绍如何实现一个 Next.js 项目的持续集成和自动化部署，鉴于自建 gitlab 和 gitlab-runner 有一定的服务器硬件要求，并且需要一定的时间成本，不是本文的重点，所以我们使用现成的 Github 作为本次教程代码管理工具，Travis CI 来自动化构建， 使用 PM2 作服务器的进程管理工具来完成本次教程。下面我列出本次教程所需的物理材料：</p>
+<ul>
+<li>Linux 远程服务器（笔者使用的版本：Ubuntu 18.04）</li>
+<li>本地个人开发主机</li>
+</ul>
+<p>后文笔者将分别用 remote 和 local 简称上述材料</p>
+<h1 id="部署策略简述"><a href="#部署策略简述" class="headerlink" title="部署策略简述"></a>部署策略简述</h1><p>我先把整个部署的策略按照步骤大致列一下，好让跟学的同学心里有个谱，判定一下符不符合自己的学习诉求</p>
+<ol>
+<li>使用 Github 托管源码</li>
+<li>Travis CI 构建生产包，并将构建包提交到 Github 的部署分支（命名如：DEPLOY-PROD）上</li>
+<li>Travis CI 完成构建包的推送后，调用 PM2 的 deploy 命令， 触发 remote 服务器拉取最新的构建包，然后自动重启服务</li>
+</ol>
+          <!--noindex-->
+          
+            <div class="post-button">
+              <a class="btn" href="/Deployment/Automated-deployment/Automated deployment/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+    
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/Tools/Shadowsocks/shadowsocks/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -295,11 +445,19 @@
                 
               
 
-              <time title="创建时间：2019-12-01 15:34:00 / 修改时间：09:32:29" itemprop="dateCreated datePublished" datetime="2019-12-01T15:34:00+00:00">2019-12-01</time>
+              <time title="创建时间：2019-12-01 15:34:00" itemprop="dateCreated datePublished" datetime="2019-12-01T15:34:00+00:00">2019-12-01</time>
             </span>
           
             
 
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-12-15 09:19:01" itemprop="dateModified" datetime="2019-12-15T09:19:01+00:00">2019-12-15</time>
+              </span>
             
           
             <span class="post-meta-item">
@@ -440,7 +598,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-12-01 09:32:29" itemprop="dateModified" datetime="2019-12-01T09:32:29+00:00">2019-12-01</time>
+                <time title="修改时间：2019-12-15 09:19:01" itemprop="dateModified" datetime="2019-12-15T09:19:01+00:00">2019-12-15</time>
               </span>
             
           
@@ -594,7 +752,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">2</span>
+          <span class="site-state-item-count">3</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -607,7 +765,7 @@
             <a href="/categories/">
           
         
-        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-count">6</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>

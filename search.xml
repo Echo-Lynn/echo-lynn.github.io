@@ -1,6 +1,159 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Github + Travis CI + PM2实现 Next.js 项目的（其他 Node.js 项目同理）持续集成和自动化部署</title>
+    <url>/Deployment/Automated-deployment/Automated%20deployment/</url>
+    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>本文将详细介绍如何实现一个 Next.js 项目的持续集成和自动化部署，鉴于自建 gitlab 和 gitlab-runner 有一定的服务器硬件要求，并且需要一定的时间成本，不是本文的重点，所以我们使用现成的 Github 作为本次教程代码管理工具，Travis CI 来自动化构建， 使用 PM2 作服务器的进程管理工具来完成本次教程。下面我列出本次教程所需的物理材料：</p>
+<ul>
+<li>Linux 远程服务器（笔者使用的版本：Ubuntu 18.04）</li>
+<li>本地个人开发主机</li>
+</ul>
+<p>后文笔者将分别用 remote 和 local 简称上述材料</p>
+<h1 id="部署策略简述"><a href="#部署策略简述" class="headerlink" title="部署策略简述"></a>部署策略简述</h1><p>我先把整个部署的策略按照步骤大致列一下，好让跟学的同学心里有个谱，判定一下符不符合自己的学习诉求</p>
+<ol>
+<li>使用 Github 托管源码</li>
+<li>Travis CI 构建生产包，并将构建包提交到 Github 的部署分支（命名如：DEPLOY-PROD）上</li>
+<li>Travis CI 完成构建包的推送后，调用 PM2 的 deploy 命令， 触发 remote 服务器拉取最新的构建包，然后自动重启服务</li>
+</ol>
+<a id="more"></a>
+
+<h1 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h1><p>remote 安装node版本管理工具 nvm [<a href="https://github.com/nvm-sh/nvm]" target="_blank" rel="noopener">https://github.com/nvm-sh/nvm]</a> 不赘述，我信你有这个动手能力</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">nvm install 12.13.1 // 安装最新稳定版</span><br><span class="line">nvm use 12.13.1 // 切换node版本</span><br><span class="line">node -v</span><br></pre></td></tr></table></figure>
+
+<p>全局安装 yarn (个人偏好)</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm install -g yarn</span><br><span class="line">yarn -v</span><br></pre></td></tr></table></figure>
+
+<p>全局安装 pm2 </p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">yarn global add pm2</span><br><span class="line">pm2 -v</span><br></pre></td></tr></table></figure>
+
+<h1 id="源码准备"><a href="#源码准备" class="headerlink" title="源码准备"></a>源码准备</h1><p>因为是教程，就一切从简了，这里以一个最小的 Next.js 应用为例</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npx create-next-app</span><br></pre></td></tr></table></figure>
+
+<p>安装完成后进入项目根目录试一下能不能在本地跑起来</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cd</span> my-app</span><br><span class="line">yarn dev</span><br></pre></td></tr></table></figure>
+
+<p>验证没问题以后，把代码推到你的 Github 上: </p>
+<p>DO IT YOURSELF</p>
+<h1 id="账号准备"><a href="#账号准备" class="headerlink" title="账号准备"></a>账号准备</h1><ol>
+<li><p>打开 Travis CI 官网 [<a href="https://travis-ci.com/]" target="_blank" rel="noopener">https://travis-ci.com/]</a></p>
+</li>
+<li><p>使用 Github 账号登录 Travis CI，授权</p>
+</li>
+<li><p>打开 Travis CI 个人页 <a href="https://travis-ci.com/account/repositories]" target="_blank" rel="noopener">https://travis-ci.com/account/repositories]</a></p>
+</li>
+<li><p>点击Activate</p>
+</li>
+<li><p>选择点击Approve &amp; Install （可选择所有项目也可以只选择选中的项目，这个以后能在Github - Settings - Applications 里改的， 不重要）</p>
+</li>
+<li><p>这时 Travis CI 就可以读取到你选中的需要构建的 Github 项目了</p>
+</li>
+<li><p>配置 Github token</p>
+<p>由于 Travis CI 完成构建以后要把构建包推到 Github 仓库上，所以需要生成一个 Token 以环境变量的方式给 Travis CI ，以获取 push 权限</p>
+<p>Github -&gt; Settings -&gt; Developer settings -&gt; Personal access tokens -&gt; Generate new token -&gt; 填写 Note 备注这个 token 的用途 -&gt; Select scopes 勾选 repo 一项 -&gt; Generate token 确认生成 -&gt; 复制生成的 token (注意这个 token 只会展示一次， 以后不会再次展现) -&gt; 回到 Travis CI 个人页, 找到你想要部署的项目，点击 Settings -&gt; 在 Environment Variables 新增一个名为 <code>GH_TOKEN</code> 的环境变量，value 就是刚才复制的 token 然后选择分支 master （根据实际情况选择）， 安全起见，<strong>不要勾选后面的 DISPLAY VALUE IN BUILD LOG</strong> </p>
+</li>
+</ol>
+<h1 id="构建"><a href="#构建" class="headerlink" title="构建"></a>构建</h1><p>一切就绪后，现在我们先来解决构建的问题，在项目的根目录下编写构建脚本 <em>.travis.yml</em></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">vim .travis.yml</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment">#.travis.yml</span></span><br><span class="line"><span class="attr">sudo:</span> <span class="literal">false</span></span><br><span class="line"><span class="attr">language:</span> <span class="string">node_js</span></span><br><span class="line"><span class="attr">node_js:</span></span><br><span class="line"><span class="bullet">  -</span> <span class="number">12</span></span><br><span class="line"><span class="attr">cache:</span> <span class="string">yarn</span></span><br><span class="line"><span class="comment">#指定构建分支</span></span><br><span class="line"><span class="attr">branches:</span></span><br><span class="line"><span class="attr">  only:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">master</span></span><br><span class="line"><span class="comment">#安装依赖</span></span><br><span class="line"><span class="attr">install:</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">yarn</span> <span class="string">install</span></span><br><span class="line"><span class="attr">script:</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">yarn</span> <span class="string">build</span></span><br><span class="line"><span class="comment">#构建成功后，把部署所需的文件都拷贝到 dist 文件夹下</span></span><br><span class="line"><span class="attr">after_success:</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">mkdir</span> <span class="string">dist</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">cp</span> <span class="bullet">-r</span> <span class="string">.next/</span> <span class="string">dist/.next</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">cp</span> <span class="string">package.json</span> <span class="string">dist</span></span><br><span class="line"><span class="comment">#把 dist 文件推送到 github DEPLOY-PROD 分支下</span></span><br><span class="line"><span class="attr">deploy:</span></span><br><span class="line"><span class="attr">  provider:</span> <span class="string">pages</span></span><br><span class="line"><span class="attr">  skip_cleanup:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">  github_token:</span> <span class="string">$GH_TOKEN</span></span><br><span class="line"><span class="attr">  keep_history:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">  target_branch:</span> <span class="string">DEPLOY-PROD</span></span><br><span class="line"><span class="attr">  committer_from_gh:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">  on:</span></span><br><span class="line"><span class="attr">    branch:</span> <span class="string">master</span></span><br><span class="line"><span class="attr">  local_dir:</span> <span class="string">dist</span></span><br></pre></td></tr></table></figure>
+
+<p><a href="这里默认你的私钥在默认路径上哈，如果有异，自行调整路径即可">^注</a>: 搭建过 Github Page 的朋友对<code>provider: pages</code>应该不陌生，这里顺便说明一下，笔者的这个部署策略其实就是借鉴了 Github Page 部署的思路，对这块还不熟悉的朋友，建议也可以自己动手利用 Github Page 搭一个个人博客试试</p>
+<p>完成构建脚本的编写后，我们提交一下代码触发一下构建试试</p>
+<p>等待 Travis CI 构建完成后，查看一下仓库下是否多了一个 DEPLOY-PROD 分支，并且分支下文件无误就说明构建这一步已经完成了。本文的重点在<strong>自动化部署</strong>，所以下文才是真正的核心部分</p>
+<h1 id="自动化部署"><a href="#自动化部署" class="headerlink" title="自动化部署"></a>自动化部署</h1><p>现在，我们整理一下思路，我们现状是：</p>
+<ul>
+<li>完成了源码托管</li>
+<li>完成了自动化构建</li>
+<li>完成了部署分支 DEPLOY-PROD</li>
+</ul>
+<p>我们需要完成的任务是：</p>
+<ul>
+<li>remote 拉取 DEPLOY-PROD 分支下的文件</li>
+<li>执行启动脚本 <code>yarn start</code> 启动服务</li>
+</ul>
+<p>笔者以往管理 Node 服务进程常用的一个工具为 </p>
+<p>近期在鼓捣自己的服务器经常查阅 PM2 文档时无意间发现了 <code>pm2 deploy</code> 的API，如获至宝 </p>
+<p>废话不多说， 列举下利用 <code>pm2 deploy</code>的构建机器需要哪些前提条件:</p>
+<ol>
+<li>装有 pm2 （还说不废话）</li>
+<li>有权登录你的服务器</li>
+</ol>
+<p>1好办，2有点头疼</p>
+<p>从安全的角度上来说，我们云服务器一般是不允许 root 通过密码登录的，都是密钥对登录，那么我们就需要把我们个人主机（默认 local 已经是通过密钥对连接 remote 了）的私钥传给 Travis CI，怎么传呢，通过上传到 Github 来传？</p>
+<h2 id="Travis-CI-构建机器连接-remote-策略"><a href="#Travis-CI-构建机器连接-remote-策略" class="headerlink" title="Travis CI 构建机器连接 remote 策略"></a>Travis CI 构建机器连接 remote 策略</h2><p><strong>是的，通过 Github，但当然不是把私钥裸露上传，而是通过 Travis CI 提供的一个命令行工具 travis 对私钥进行加密，travis加密会生成一个加密过的文件并且会自动在项目构建配置里生成两个用于解密的环境变量，我们把加密过的文件上传到 Github 项目仓库下，构建时用两个解密的环境变量把文件解密，这样一来，Travis CI 构建机器就有权限连接 remote了，而且安全问题得以保障</strong>，下面是具体操作步骤：</p>
+<ol>
+<li><p>Local 安装 travis </p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">gem install travis</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>用 github 账号登录 travis</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">travis login --com</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>进入项目的根目录加密私钥</p>
+ <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">travis encrypt-file ~/.ssh/id_rsa --add --com</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<pre><code>travis会自动识别本地仓库对应的是远程的哪个仓库，执行完命令后，你的本地项目根目录会生成一个 `id_rsa.enc` 文件，你的 `.travis.yml` 脚本会多出一段 `before-install` 的解密脚本（需要调整一下细节，详情见下文完整文件），打开 Travis CI 的项目设置页查看 Environment Variables 一栏多了一个 以 `_iv` 和一个以 `_key` 结尾的环境变量</code></pre><ol start="4">
+<li><p>第3步的结果确认无误后，我们再给 Travis CI 配置多一个环境变量PROD_SERVER_IP来存放 remote IP，添加方法上文讲过，不再赘述。</p>
+</li>
+<li><p>我们修改构建脚本文件来验证一下是否能够登陆成功</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">sudo:</span> <span class="literal">false</span></span><br><span class="line"><span class="attr">language:</span> <span class="string">node_js</span></span><br><span class="line"><span class="attr">node_js:</span></span><br><span class="line"><span class="bullet">-</span> <span class="number">12</span></span><br><span class="line"><span class="attr">cache:</span> <span class="string">yarn</span></span><br><span class="line"><span class="attr">branches:</span></span><br><span class="line"><span class="attr">  only:</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">master</span></span><br><span class="line"><span class="attr">before_install:</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">openssl</span> <span class="string">aes-256-cbc</span> <span class="bullet">-K</span> <span class="string">$encrypted_db8d9b5ea11f_key</span> <span class="bullet">-iv</span> <span class="string">$encrypted_db8d9b5ea11f_iv</span> <span class="bullet">-in</span> <span class="string">id_rsa.enc</span> <span class="bullet">-out</span> <span class="string">~/.ssh/id_rsa</span> <span class="bullet">-d</span></span><br><span class="line">  <span class="comment">#降低id_rsa文件的权限，否则ssh处于安全方面的原因会拒绝读取秘钥</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">chmod</span> <span class="number">600</span> <span class="string">~/.ssh/id_rsa</span></span><br><span class="line">  <span class="comment">#将生产服务器地址加入到构建机的信任列表中，否则连接时会询问是否信任服务器</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">echo</span> <span class="bullet">-e</span> <span class="string">"Host $PROD_SERVER_IP\n\tStrictHostKeyChecking no\n"</span> <span class="string">&gt;&gt;</span> <span class="string">~/.ssh/config</span></span><br><span class="line"><span class="attr">install:</span></span><br><span class="line"><span class="bullet">-</span> <span class="string">yarn</span> <span class="string">install</span></span><br><span class="line"><span class="attr">script:</span></span><br><span class="line"><span class="bullet">-</span> <span class="string">yarn</span> <span class="string">build</span></span><br><span class="line"><span class="attr">after_success:</span></span><br><span class="line"><span class="bullet">-</span> <span class="string">mkdir</span> <span class="string">dist</span></span><br><span class="line"><span class="bullet">-</span> <span class="string">cp</span> <span class="bullet">-r</span> <span class="string">.next/</span> <span class="string">dist/.next</span></span><br><span class="line"><span class="bullet">-</span> <span class="string">cp</span> <span class="string">package.json</span> <span class="string">dist</span></span><br><span class="line"><span class="attr">deploy:</span></span><br><span class="line"><span class="attr">  provider:</span> <span class="string">pages</span></span><br><span class="line"><span class="attr">  skip_cleanup:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">  github_token:</span> <span class="string">"$GH_TOKEN"</span></span><br><span class="line"><span class="attr">  keep_history:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">  target_branch:</span> <span class="string">DEPLOY-PROD</span></span><br><span class="line"><span class="attr">  committer_from_gh:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">  on:</span></span><br><span class="line"><span class="attr">    branch:</span> <span class="string">master</span></span><br><span class="line"><span class="attr">  local_dir:</span> <span class="string">dist</span></span><br><span class="line"><span class="attr">after_deploy:</span></span><br><span class="line">  <span class="string">ssh</span> <span class="string">root@$PROD_SERVER_IP</span> <span class="string">'pwd'</span></span><br></pre></td></tr></table></figure>
+
+<p>提交代码，注意要把 id_rsa.enc 文件带上，千万别错把你的真正的私钥提交了。</p>
+<p>等待构建完成，确认构建日志是否打印出 <code>/root</code>  字样验证连接成功与否</p>
+</li>
+</ol>
+<h2 id="远程服务器获取github仓库pull权限"><a href="#远程服务器获取github仓库pull权限" class="headerlink" title="远程服务器获取github仓库pull权限"></a>远程服务器获取github仓库pull权限</h2><p>使用 pm2 部署还有个前提，直接引用官方原话</p>
+<blockquote>
+<p>Verify that your remote server has the permission to git clone the repository</p>
+</blockquote>
+<p>需要确保 remote 能够使用 ssh 的方式 clone 代码仓库</p>
+<p>操作步骤： </p>
+<ol>
+<li><p>remote 生成密钥对（ubuntu为例，已有密钥对的话忽略此步）</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ssh-keygen -t rsa // 一路回车，不要设置使用短语</span><br><span class="line">cat .ssh/id_rsa.pub // 把打印出来的公钥内容复制</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Github -&gt; Settings -&gt; SSH and GPG keys -&gt; New SSH key -&gt; Title 一栏填入备注信息，Key 一栏粘贴第1步复制的公钥 -&gt; Add SSH key</p>
+</li>
+<li><p>测试 remote 拉取仓库，注意使用 SSH 连接</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> <span class="variable">$YOUR_SSH_GIT_URL</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>拉取权限没问题后，我们创建一个空目录以备后文部署使用</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">mkdir /data/www/demo-for-automated-deployment</span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ol>
+<h2 id="配置-pm2"><a href="#配置-pm2" class="headerlink" title="配置 pm2"></a>配置 pm2</h2><p>解决了仓库拉取的问题后，我们正式进入部署配置的阶段</p>
+<p>参考 pm2 deployment 的相关文档，根据我们实际的需求来编写 pm2 的配置文件，项目根目录下</p>
+<figure class="highlight"><table><tr><td class="code"><pre><span class="line">vim ecosystem.config.js</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">// ecosystem.config.js</span></span><br><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  apps: [</span><br><span class="line">    &#123;</span><br><span class="line">      name: <span class="string">'da_prod'</span>,</span><br><span class="line">      script: <span class="string">'yarn'</span>,</span><br><span class="line">      args: <span class="string">'run start'</span></span><br><span class="line">    &#125;</span><br><span class="line">  ],</span><br><span class="line">  deploy: &#123;</span><br><span class="line">    <span class="comment">// "prod" is the environment name</span></span><br><span class="line">    prod: &#123;</span><br><span class="line">      user: <span class="string">'root'</span>,</span><br><span class="line">      key: <span class="string">'~/.ssh/id_rsa'</span>,</span><br><span class="line">      host: [<span class="string">'$YOUR_REMOTE_IP'</span>],</span><br><span class="line">      ssh_options: <span class="string">'StrictHostKeyChecking=no'</span>,</span><br><span class="line">      <span class="comment">// 拉取部署分支</span></span><br><span class="line">      ref: <span class="string">'origin/DEPLOY-PROD'</span>,</span><br><span class="line">      <span class="comment">// 仓库地址</span></span><br><span class="line">      repo: <span class="string">'git@github.com:Echo-Lynn/demo-for-automated-deployment.git'</span>,</span><br><span class="line">      <span class="comment">// 部署 remote 路径</span></span><br><span class="line">      path: <span class="string">'/data/www/demo-for-automated-deployment'</span>,</span><br><span class="line">      <span class="string">'post-deploy'</span>: <span class="string">'.  /root/.nvm/nvm.sh &amp;&amp; yarn install &amp;&amp; pm2 reload ecosystem.config.js'</span></span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中 <code>apps</code> 选项是启动服务使用的配置，也就是说执行环境在 remote；<code>deploy</code> 是部署命令，执行环境在 Travis CI 的构建机器</p>
+<p><a href="这里默认你的私钥在默认路径上哈，如果有异，自行调整路径即可">^注</a>: 有个坑点坑了笔者很多时间，我们平时使用终端连上服务器后，系统会开始自动准备好环境变量了，所以我们能轻松自如地在终端里使用 <code>npm</code>、<code>yarn</code>、<code>node</code>等非 Ubuntu 自带的命令。pm2 部署的时候远程调用 <code>yarn</code> 和 <code>pm2</code> ，是在非交互式的情况下调用的，也就是说环境变量并没有立刻就绪，所以在 <code>post-deploy</code> 里需要手动调用一下 <code>/root/.nvm/nvm.sh</code> 这个环境变量的脚本</p>
+<p>修改 <code>.travis.yml</code> 文件的 <code>install</code> 和 <code>after_deploy</code></p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">install:</span></span><br><span class="line">	<span class="bullet">-</span> <span class="string">yarn</span> <span class="string">add</span> <span class="string">global</span> <span class="string">pm2</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">yarn</span> <span class="string">install</span></span><br><span class="line"><span class="attr">after_success:</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">mkdir</span> <span class="string">dist</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">cp</span> <span class="bullet">-r</span> <span class="string">.next/</span> <span class="string">dist/.next</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">cp</span> <span class="string">package.json</span> <span class="string">ecosystem.config.js</span> <span class="string">dist</span></span><br><span class="line"><span class="attr">after_deploy:</span></span><br><span class="line">	<span class="bullet">-</span> <span class="string">pm2</span> <span class="string">deploy</span> <span class="string">pm2.config.js</span> <span class="string">prod</span> <span class="string">setup</span> <span class="bullet">--force</span></span><br></pre></td></tr></table></figure>
+
+<p>第一次使用 <code>setup</code> 建立部署环境</p>
+<p>提交代码到 Github，等待构建完成后，查看构建日志看到 pm2 deploy后有 <code>suucess</code> 字样就说明 setup 成功了</p>
+<p>接着，修改 <code>.travis.yml</code> 文件的 <code>after_deploy</code></p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">after_deploy:</span></span><br><span class="line">	<span class="bullet">-</span> <span class="string">pm2</span> <span class="string">deploy</span> <span class="string">pm2.config.js</span> <span class="string">prod</span> <span class="string">update</span> <span class="bullet">--force</span></span><br></pre></td></tr></table></figure>
+
+<p>提交代码到 Github，等待构建完成</p>
+<p>最后，在远程服务器上</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pm2 ls</span><br><span class="line">curl http://localhost:3000</span><br></pre></td></tr></table></figure>
+
+<p>验证进程是否成功启动，服务是否能够访问得到</p>
+<h1 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h1><p>本次分享的内容就到此结束了。由于构建和部署本身就是比较综合性的应用，涉及的知识范围比较广，对动手能力和调试排除能力都有较高的要求，实际操作起来可能由于各种环境的不尽相同也会产生一些不顺利的体验，但这些其实都不重要，重要的是供大家参考的这个部署思路，条条大路通罗马，具体怎么设计策略要看手上的资源和场景需求。</p>
+<h1 id="DEMO地址"><a href="#DEMO地址" class="headerlink" title="DEMO地址"></a>DEMO地址</h1>]]></content>
+      <categories>
+        <category>Deployment</category>
+        <category>Automated deployment</category>
+      </categories>
+  </entry>
+  <entry>
     <title>在 Ubuntu 上使用 Shadowsocks 搭建个人 VPN 服务器</title>
     <url>/Tools/Shadowsocks/shadowsocks/</url>
     <content><![CDATA[<h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>拥有一台海外云服务器能做什么？</p>

@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.1">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.1">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.1">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.1" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.1">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.4.1',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="前言本文将详细介绍如何实现一个 Next.js 项目的持续集成和自动化部署，鉴于自建 gitlab 和 gitlab-runner 有一定的服务器硬件要求，并且需要一定的时间成本，不是本文的重点，所以我们使用现成的 Github 作为本次教程代码管理工具，Travis CI 来自动化构建， 使用 PM2 作服务器的进程管理工具来完成本次教程。下面我列出本次教程所需的物理材料：  Linux 远程服">
+<meta name="keywords" content="Web JavaScript Front-end Node.js React.js Vue.js Next.js">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Github + Travis CI + PM2实现 Next.js 项目的（其他 Node.js 项目同理）持续集成和自动化部署">
+<meta property="og:url" content="http://yoursite.com/Deployment/Automated-deployment/Automated deployment/index.html">
+<meta property="og:site_name" content="Echo Lynn&#39;s Blog">
+<meta property="og:description" content="前言本文将详细介绍如何实现一个 Next.js 项目的持续集成和自动化部署，鉴于自建 gitlab 和 gitlab-runner 有一定的服务器硬件要求，并且需要一定的时间成本，不是本文的重点，所以我们使用现成的 Github 作为本次教程代码管理工具，Travis CI 来自动化构建， 使用 PM2 作服务器的进程管理工具来完成本次教程。下面我列出本次教程所需的物理材料：  Linux 远程服">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-12-15T09:19:01.005Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Github + Travis CI + PM2实现 Next.js 项目的（其他 Node.js 项目同理）持续集成和自动化部署">
+<meta name="twitter:description" content="前言本文将详细介绍如何实现一个 Next.js 项目的持续集成和自动化部署，鉴于自建 gitlab 和 gitlab-runner 有一定的服务器硬件要求，并且需要一定的时间成本，不是本文的重点，所以我们使用现成的 Github 作为本次教程代码管理工具，Travis CI 来自动化构建， 使用 PM2 作服务器的进程管理工具来完成本次教程。下面我列出本次教程所需的物理材料：  Linux 远程服">
+  <link rel="canonical" href="http://yoursite.com/Deployment/Automated-deployment/Automated deployment/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Github + Travis CI + PM2实现 Next.js 项目的（其他 Node.js 项目同理）持续集成和自动化部署 | Echo Lynn's Blog</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Echo Lynn's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+        
+        
+        <li class="menu-item menu-item-home">
+      
+    
+      
+      
+        
+      
+        
+      
+        
+      
+    
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+      
+    
+      
+      
+        
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+      
+      
+        
+      
+        
+          
+        
+      
+        
+      
+    
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类<span class="badge">6</span></a>
+
+  </li>
+      
+    
+      
+      
+        
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+      
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档<span class="badge">3</span></a>
+
+  </li>
+      
+    
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger">
+          <i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+    
+  </ul>
+
+    
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/Deployment/Automated-deployment/Automated deployment/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Echo Lynn">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Echo Lynn's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            Github + Travis CI + PM2实现 Next.js 项目的（其他 Node.js 项目同理）持续集成和自动化部署
+            
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-12-14 13:15:00" itemprop="dateCreated datePublished" datetime="2019-12-14T13:15:00+00:00">2019-12-14</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-12-15 09:19:01" itemprop="dateModified" datetime="2019-12-15T09:19:01+00:00">2019-12-15</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Deployment/" itemprop="url" rel="index">
+                    <span itemprop="name">Deployment</span>
+                  </a>
+                </span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Deployment/Automated-deployment/" itemprop="url" rel="index">
+                    <span itemprop="name">Automated deployment</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            <span id="/Deployment/Automated-deployment/Automated deployment/" class="post-meta-item leancloud_visitors" data-flag-title="Github + Travis CI + PM2实现 Next.js 项目的（其他 Node.js 项目同理）持续集成和自动化部署" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/Deployment/Automated-deployment/Automated deployment/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/Deployment/Automated-deployment/Automated deployment/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>本文将详细介绍如何实现一个 Next.js 项目的持续集成和自动化部署，鉴于自建 gitlab 和 gitlab-runner 有一定的服务器硬件要求，并且需要一定的时间成本，不是本文的重点，所以我们使用现成的 Github 作为本次教程代码管理工具，Travis CI 来自动化构建， 使用 PM2 作服务器的进程管理工具来完成本次教程。下面我列出本次教程所需的物理材料：</p>
+<ul>
+<li>Linux 远程服务器（笔者使用的版本：Ubuntu 18.04）</li>
+<li>本地个人开发主机</li>
+</ul>
+<p>后文笔者将分别用 remote 和 local 简称上述材料</p>
+<h1 id="部署策略简述"><a href="#部署策略简述" class="headerlink" title="部署策略简述"></a>部署策略简述</h1><p>我先把整个部署的策略按照步骤大致列一下，好让跟学的同学心里有个谱，判定一下符不符合自己的学习诉求</p>
+<ol>
+<li>使用 Github 托管源码</li>
+<li>Travis CI 构建生产包，并将构建包提交到 Github 的部署分支（命名如：DEPLOY-PROD）上</li>
+<li>Travis CI 完成构建包的推送后，调用 PM2 的 deploy 命令， 触发 remote 服务器拉取最新的构建包，然后自动重启服务</li>
+</ol>
+<a id="more"></a>
+
+<h1 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h1><p>remote 安装node版本管理工具 nvm [<a href="https://github.com/nvm-sh/nvm]" target="_blank" rel="noopener">https://github.com/nvm-sh/nvm]</a> 不赘述，我信你有这个动手能力</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">nvm install 12.13.1 // 安装最新稳定版</span><br><span class="line">nvm use 12.13.1 // 切换node版本</span><br><span class="line">node -v</span><br></pre></td></tr></table></figure>
+
+<p>全局安装 yarn (个人偏好)</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">npm install -g yarn</span><br><span class="line">yarn -v</span><br></pre></td></tr></table></figure>
+
+<p>全局安装 pm2 </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yarn global add pm2</span><br><span class="line">pm2 -v</span><br></pre></td></tr></table></figure>
+
+<h1 id="源码准备"><a href="#源码准备" class="headerlink" title="源码准备"></a>源码准备</h1><p>因为是教程，就一切从简了，这里以一个最小的 Next.js 应用为例</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npx create-next-app</span><br></pre></td></tr></table></figure>
+
+<p>安装完成后进入项目根目录试一下能不能在本地跑起来</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> my-app</span><br><span class="line">yarn dev</span><br></pre></td></tr></table></figure>
+
+<p>验证没问题以后，把代码推到你的 Github 上: </p>
+<p>DO IT YOURSELF</p>
+<h1 id="账号准备"><a href="#账号准备" class="headerlink" title="账号准备"></a>账号准备</h1><ol>
+<li><p>打开 Travis CI 官网 [<a href="https://travis-ci.com/]" target="_blank" rel="noopener">https://travis-ci.com/]</a></p>
+</li>
+<li><p>使用 Github 账号登录 Travis CI，授权</p>
+</li>
+<li><p>打开 Travis CI 个人页 <a href="https://travis-ci.com/account/repositories]" target="_blank" rel="noopener">https://travis-ci.com/account/repositories]</a></p>
+</li>
+<li><p>点击Activate</p>
+</li>
+<li><p>选择点击Approve &amp; Install （可选择所有项目也可以只选择选中的项目，这个以后能在Github - Settings - Applications 里改的， 不重要）</p>
+</li>
+<li><p>这时 Travis CI 就可以读取到你选中的需要构建的 Github 项目了</p>
+</li>
+<li><p>配置 Github token</p>
+<p>由于 Travis CI 完成构建以后要把构建包推到 Github 仓库上，所以需要生成一个 Token 以环境变量的方式给 Travis CI ，以获取 push 权限</p>
+<p>Github -&gt; Settings -&gt; Developer settings -&gt; Personal access tokens -&gt; Generate new token -&gt; 填写 Note 备注这个 token 的用途 -&gt; Select scopes 勾选 repo 一项 -&gt; Generate token 确认生成 -&gt; 复制生成的 token (注意这个 token 只会展示一次， 以后不会再次展现) -&gt; 回到 Travis CI 个人页, 找到你想要部署的项目，点击 Settings -&gt; 在 Environment Variables 新增一个名为 <code>GH_TOKEN</code> 的环境变量，value 就是刚才复制的 token 然后选择分支 master （根据实际情况选择）， 安全起见，<strong>不要勾选后面的 DISPLAY VALUE IN BUILD LOG</strong> </p>
+</li>
+</ol>
+<h1 id="构建"><a href="#构建" class="headerlink" title="构建"></a>构建</h1><p>一切就绪后，现在我们先来解决构建的问题，在项目的根目录下编写构建脚本 <em>.travis.yml</em></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim .travis.yml</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#.travis.yml</span></span><br><span class="line"><span class="attr">sudo:</span> <span class="literal">false</span></span><br><span class="line"><span class="attr">language:</span> <span class="string">node_js</span></span><br><span class="line"><span class="attr">node_js:</span></span><br><span class="line"><span class="bullet">  -</span> <span class="number">12</span></span><br><span class="line"><span class="attr">cache:</span> <span class="string">yarn</span></span><br><span class="line"><span class="comment">#指定构建分支</span></span><br><span class="line"><span class="attr">branches:</span></span><br><span class="line"><span class="attr">  only:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">master</span></span><br><span class="line"><span class="comment">#安装依赖</span></span><br><span class="line"><span class="attr">install:</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">yarn</span> <span class="string">install</span></span><br><span class="line"><span class="attr">script:</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">yarn</span> <span class="string">build</span></span><br><span class="line"><span class="comment">#构建成功后，把部署所需的文件都拷贝到 dist 文件夹下</span></span><br><span class="line"><span class="attr">after_success:</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">mkdir</span> <span class="string">dist</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">cp</span> <span class="bullet">-r</span> <span class="string">.next/</span> <span class="string">dist/.next</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">cp</span> <span class="string">package.json</span> <span class="string">dist</span></span><br><span class="line"><span class="comment">#把 dist 文件推送到 github DEPLOY-PROD 分支下</span></span><br><span class="line"><span class="attr">deploy:</span></span><br><span class="line"><span class="attr">  provider:</span> <span class="string">pages</span></span><br><span class="line"><span class="attr">  skip_cleanup:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">  github_token:</span> <span class="string">$GH_TOKEN</span></span><br><span class="line"><span class="attr">  keep_history:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">  target_branch:</span> <span class="string">DEPLOY-PROD</span></span><br><span class="line"><span class="attr">  committer_from_gh:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">  on:</span></span><br><span class="line"><span class="attr">    branch:</span> <span class="string">master</span></span><br><span class="line"><span class="attr">  local_dir:</span> <span class="string">dist</span></span><br></pre></td></tr></table></figure>
+
+<p><a href="这里默认你的私钥在默认路径上哈，如果有异，自行调整路径即可">^注</a>: 搭建过 Github Page 的朋友对<code>provider: pages</code>应该不陌生，这里顺便说明一下，笔者的这个部署策略其实就是借鉴了 Github Page 部署的思路，对这块还不熟悉的朋友，建议也可以自己动手利用 Github Page 搭一个个人博客试试</p>
+<p>完成构建脚本的编写后，我们提交一下代码触发一下构建试试</p>
+<p>等待 Travis CI 构建完成后，查看一下仓库下是否多了一个 DEPLOY-PROD 分支，并且分支下文件无误就说明构建这一步已经完成了。本文的重点在<strong>自动化部署</strong>，所以下文才是真正的核心部分</p>
+<h1 id="自动化部署"><a href="#自动化部署" class="headerlink" title="自动化部署"></a>自动化部署</h1><p>现在，我们整理一下思路，我们现状是：</p>
+<ul>
+<li>完成了源码托管</li>
+<li>完成了自动化构建</li>
+<li>完成了部署分支 DEPLOY-PROD</li>
+</ul>
+<p>我们需要完成的任务是：</p>
+<ul>
+<li>remote 拉取 DEPLOY-PROD 分支下的文件</li>
+<li>执行启动脚本 <code>yarn start</code> 启动服务</li>
+</ul>
+<p>笔者以往管理 Node 服务进程常用的一个工具为 </p>
+<p>近期在鼓捣自己的服务器经常查阅 PM2 文档时无意间发现了 <code>pm2 deploy</code> 的API，如获至宝 </p>
+<p>废话不多说， 列举下利用 <code>pm2 deploy</code>的构建机器需要哪些前提条件:</p>
+<ol>
+<li>装有 pm2 （还说不废话）</li>
+<li>有权登录你的服务器</li>
+</ol>
+<p>1好办，2有点头疼</p>
+<p>从安全的角度上来说，我们云服务器一般是不允许 root 通过密码登录的，都是密钥对登录，那么我们就需要把我们个人主机（默认 local 已经是通过密钥对连接 remote 了）的私钥传给 Travis CI，怎么传呢，通过上传到 Github 来传？</p>
+<h2 id="Travis-CI-构建机器连接-remote-策略"><a href="#Travis-CI-构建机器连接-remote-策略" class="headerlink" title="Travis CI 构建机器连接 remote 策略"></a>Travis CI 构建机器连接 remote 策略</h2><p><strong>是的，通过 Github，但当然不是把私钥裸露上传，而是通过 Travis CI 提供的一个命令行工具 travis 对私钥进行加密，travis加密会生成一个加密过的文件并且会自动在项目构建配置里生成两个用于解密的环境变量，我们把加密过的文件上传到 Github 项目仓库下，构建时用两个解密的环境变量把文件解密，这样一来，Travis CI 构建机器就有权限连接 remote了，而且安全问题得以保障</strong>，下面是具体操作步骤：</p>
+<ol>
+<li><p>Local 安装 travis </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gem install travis</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>用 github 账号登录 travis</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">travis login --com</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>进入项目的根目录加密私钥</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">travis encrypt-file ~/.ssh/id_rsa --add --com</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<pre><code>travis会自动识别本地仓库对应的是远程的哪个仓库，执行完命令后，你的本地项目根目录会生成一个 `id_rsa.enc` 文件，你的 `.travis.yml` 脚本会多出一段 `before-install` 的解密脚本（需要调整一下细节，详情见下文完整文件），打开 Travis CI 的项目设置页查看 Environment Variables 一栏多了一个 以 `_iv` 和一个以 `_key` 结尾的环境变量</code></pre><ol start="4">
+<li><p>第3步的结果确认无误后，我们再给 Travis CI 配置多一个环境变量PROD_SERVER_IP来存放 remote IP，添加方法上文讲过，不再赘述。</p>
+</li>
+<li><p>我们修改构建脚本文件来验证一下是否能够登陆成功</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">sudo:</span> <span class="literal">false</span></span><br><span class="line"><span class="attr">language:</span> <span class="string">node_js</span></span><br><span class="line"><span class="attr">node_js:</span></span><br><span class="line"><span class="bullet">-</span> <span class="number">12</span></span><br><span class="line"><span class="attr">cache:</span> <span class="string">yarn</span></span><br><span class="line"><span class="attr">branches:</span></span><br><span class="line"><span class="attr">  only:</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">master</span></span><br><span class="line"><span class="attr">before_install:</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">openssl</span> <span class="string">aes-256-cbc</span> <span class="bullet">-K</span> <span class="string">$encrypted_db8d9b5ea11f_key</span> <span class="bullet">-iv</span> <span class="string">$encrypted_db8d9b5ea11f_iv</span> <span class="bullet">-in</span> <span class="string">id_rsa.enc</span> <span class="bullet">-out</span> <span class="string">~/.ssh/id_rsa</span> <span class="bullet">-d</span></span><br><span class="line">  <span class="comment">#降低id_rsa文件的权限，否则ssh处于安全方面的原因会拒绝读取秘钥</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">chmod</span> <span class="number">600</span> <span class="string">~/.ssh/id_rsa</span></span><br><span class="line">  <span class="comment">#将生产服务器地址加入到构建机的信任列表中，否则连接时会询问是否信任服务器</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">echo</span> <span class="bullet">-e</span> <span class="string">"Host $PROD_SERVER_IP\n\tStrictHostKeyChecking no\n"</span> <span class="string">&gt;&gt;</span> <span class="string">~/.ssh/config</span></span><br><span class="line"><span class="attr">install:</span></span><br><span class="line"><span class="bullet">-</span> <span class="string">yarn</span> <span class="string">install</span></span><br><span class="line"><span class="attr">script:</span></span><br><span class="line"><span class="bullet">-</span> <span class="string">yarn</span> <span class="string">build</span></span><br><span class="line"><span class="attr">after_success:</span></span><br><span class="line"><span class="bullet">-</span> <span class="string">mkdir</span> <span class="string">dist</span></span><br><span class="line"><span class="bullet">-</span> <span class="string">cp</span> <span class="bullet">-r</span> <span class="string">.next/</span> <span class="string">dist/.next</span></span><br><span class="line"><span class="bullet">-</span> <span class="string">cp</span> <span class="string">package.json</span> <span class="string">dist</span></span><br><span class="line"><span class="attr">deploy:</span></span><br><span class="line"><span class="attr">  provider:</span> <span class="string">pages</span></span><br><span class="line"><span class="attr">  skip_cleanup:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">  github_token:</span> <span class="string">"$GH_TOKEN"</span></span><br><span class="line"><span class="attr">  keep_history:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">  target_branch:</span> <span class="string">DEPLOY-PROD</span></span><br><span class="line"><span class="attr">  committer_from_gh:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">  on:</span></span><br><span class="line"><span class="attr">    branch:</span> <span class="string">master</span></span><br><span class="line"><span class="attr">  local_dir:</span> <span class="string">dist</span></span><br><span class="line"><span class="attr">after_deploy:</span></span><br><span class="line">  <span class="string">ssh</span> <span class="string">root@$PROD_SERVER_IP</span> <span class="string">'pwd'</span></span><br></pre></td></tr></table></figure>
+
+<p>提交代码，注意要把 id_rsa.enc 文件带上，千万别错把你的真正的私钥提交了。</p>
+<p>等待构建完成，确认构建日志是否打印出 <code>/root</code>  字样验证连接成功与否</p>
+</li>
+</ol>
+<h2 id="远程服务器获取github仓库pull权限"><a href="#远程服务器获取github仓库pull权限" class="headerlink" title="远程服务器获取github仓库pull权限"></a>远程服务器获取github仓库pull权限</h2><p>使用 pm2 部署还有个前提，直接引用官方原话</p>
+<blockquote>
+<p>Verify that your remote server has the permission to git clone the repository</p>
+</blockquote>
+<p>需要确保 remote 能够使用 ssh 的方式 clone 代码仓库</p>
+<p>操作步骤： </p>
+<ol>
+<li><p>remote 生成密钥对（ubuntu为例，已有密钥对的话忽略此步）</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ssh-keygen -t rsa // 一路回车，不要设置使用短语</span><br><span class="line">cat .ssh/id_rsa.pub // 把打印出来的公钥内容复制</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Github -&gt; Settings -&gt; SSH and GPG keys -&gt; New SSH key -&gt; Title 一栏填入备注信息，Key 一栏粘贴第1步复制的公钥 -&gt; Add SSH key</p>
+</li>
+<li><p>测试 remote 拉取仓库，注意使用 SSH 连接</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">clone</span> <span class="variable">$YOUR_SSH_GIT_URL</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>拉取权限没问题后，我们创建一个空目录以备后文部署使用</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkdir /data/www/demo-for-automated-deployment</span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ol>
+<h2 id="配置-pm2"><a href="#配置-pm2" class="headerlink" title="配置 pm2"></a>配置 pm2</h2><p>解决了仓库拉取的问题后，我们正式进入部署配置的阶段</p>
+<p>参考 pm2 deployment 的相关文档，根据我们实际的需求来编写 pm2 的配置文件，项目根目录下</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim ecosystem.config.js</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ecosystem.config.js</span></span><br><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  apps: [</span><br><span class="line">    &#123;</span><br><span class="line">      name: <span class="string">'da_prod'</span>,</span><br><span class="line">      script: <span class="string">'yarn'</span>,</span><br><span class="line">      args: <span class="string">'run start'</span></span><br><span class="line">    &#125;</span><br><span class="line">  ],</span><br><span class="line">  deploy: &#123;</span><br><span class="line">    <span class="comment">// "prod" is the environment name</span></span><br><span class="line">    prod: &#123;</span><br><span class="line">      user: <span class="string">'root'</span>,</span><br><span class="line">      key: <span class="string">'~/.ssh/id_rsa'</span>,</span><br><span class="line">      host: [<span class="string">'$YOUR_REMOTE_IP'</span>],</span><br><span class="line">      ssh_options: <span class="string">'StrictHostKeyChecking=no'</span>,</span><br><span class="line">      <span class="comment">// 拉取部署分支</span></span><br><span class="line">      ref: <span class="string">'origin/DEPLOY-PROD'</span>,</span><br><span class="line">      <span class="comment">// 仓库地址</span></span><br><span class="line">      repo: <span class="string">'git@github.com:Echo-Lynn/demo-for-automated-deployment.git'</span>,</span><br><span class="line">      <span class="comment">// 部署 remote 路径</span></span><br><span class="line">      path: <span class="string">'/data/www/demo-for-automated-deployment'</span>,</span><br><span class="line">      <span class="string">'post-deploy'</span>: <span class="string">'.  /root/.nvm/nvm.sh &amp;&amp; yarn install &amp;&amp; pm2 reload ecosystem.config.js'</span></span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中 <code>apps</code> 选项是启动服务使用的配置，也就是说执行环境在 remote；<code>deploy</code> 是部署命令，执行环境在 Travis CI 的构建机器</p>
+<p><a href="这里默认你的私钥在默认路径上哈，如果有异，自行调整路径即可">^注</a>: 有个坑点坑了笔者很多时间，我们平时使用终端连上服务器后，系统会开始自动准备好环境变量了，所以我们能轻松自如地在终端里使用 <code>npm</code>、<code>yarn</code>、<code>node</code>等非 Ubuntu 自带的命令。pm2 部署的时候远程调用 <code>yarn</code> 和 <code>pm2</code> ，是在非交互式的情况下调用的，也就是说环境变量并没有立刻就绪，所以在 <code>post-deploy</code> 里需要手动调用一下 <code>/root/.nvm/nvm.sh</code> 这个环境变量的脚本</p>
+<p>修改 <code>.travis.yml</code> 文件的 <code>install</code> 和 <code>after_deploy</code></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">install:</span></span><br><span class="line">	<span class="bullet">-</span> <span class="string">yarn</span> <span class="string">add</span> <span class="string">global</span> <span class="string">pm2</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">yarn</span> <span class="string">install</span></span><br><span class="line"><span class="attr">after_success:</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">mkdir</span> <span class="string">dist</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">cp</span> <span class="bullet">-r</span> <span class="string">.next/</span> <span class="string">dist/.next</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">cp</span> <span class="string">package.json</span> <span class="string">ecosystem.config.js</span> <span class="string">dist</span></span><br><span class="line"><span class="attr">after_deploy:</span></span><br><span class="line">	<span class="bullet">-</span> <span class="string">pm2</span> <span class="string">deploy</span> <span class="string">pm2.config.js</span> <span class="string">prod</span> <span class="string">setup</span> <span class="bullet">--force</span></span><br></pre></td></tr></table></figure>
+
+<p>第一次使用 <code>setup</code> 建立部署环境</p>
+<p>提交代码到 Github，等待构建完成后，查看构建日志看到 pm2 deploy后有 <code>suucess</code> 字样就说明 setup 成功了</p>
+<p>接着，修改 <code>.travis.yml</code> 文件的 <code>after_deploy</code></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">after_deploy:</span></span><br><span class="line">	<span class="bullet">-</span> <span class="string">pm2</span> <span class="string">deploy</span> <span class="string">pm2.config.js</span> <span class="string">prod</span> <span class="string">update</span> <span class="bullet">--force</span></span><br></pre></td></tr></table></figure>
+
+<p>提交代码到 Github，等待构建完成</p>
+<p>最后，在远程服务器上</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">pm2 ls</span><br><span class="line">curl http://localhost:3000</span><br></pre></td></tr></table></figure>
+
+<p>验证进程是否成功启动，服务是否能够访问得到</p>
+<h1 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h1><p>本次分享的内容就到此结束了。由于构建和部署本身就是比较综合性的应用，涉及的知识范围比较广，对动手能力和调试排除能力都有较高的要求，实际操作起来可能由于各种环境的不尽相同也会产生一些不顺利的体验，但这些其实都不重要，重要的是供大家参考的这个部署思路，条条大路通罗马，具体怎么设计策略要看手上的资源和场景需求。</p>
+<h1 id="DEMO地址"><a href="#DEMO地址" class="headerlink" title="DEMO地址"></a>DEMO地址</h1>
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/Tools/Shadowsocks/shadowsocks/" rel="next" title="在 Ubuntu 上使用 Shadowsocks 搭建个人 VPN 服务器">
+                  <i class="fa fa-chevron-left"></i> 在 Ubuntu 上使用 Shadowsocks 搭建个人 VPN 服务器
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="comments"></div>
+  
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#部署策略简述"><span class="nav-number">2.</span> <span class="nav-text">部署策略简述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#环境准备"><span class="nav-number">3.</span> <span class="nav-text">环境准备</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#源码准备"><span class="nav-number">4.</span> <span class="nav-text">源码准备</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#账号准备"><span class="nav-number">5.</span> <span class="nav-text">账号准备</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#构建"><span class="nav-number">6.</span> <span class="nav-text">构建</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#自动化部署"><span class="nav-number">7.</span> <span class="nav-text">自动化部署</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Travis-CI-构建机器连接-remote-策略"><span class="nav-number">7.1.</span> <span class="nav-text">Travis CI 构建机器连接 remote 策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#远程服务器获取github仓库pull权限"><span class="nav-number">7.2.</span> <span class="nav-text">远程服务器获取github仓库pull权限</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置-pm2"><span class="nav-number">7.3.</span> <span class="nav-text">配置 pm2</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#结语"><span class="nav-number">8.</span> <span class="nav-text">结语</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#DEMO地址"><span class="nav-number">9.</span> <span class="nav-text">DEMO地址</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/avatar.jpg"
+      alt="Echo Lynn">
+  <p class="site-author-name" itemprop="name">Echo Lynn</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Echo Lynn</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">
+      
+    主题 – <a href="https://mist.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.4.1
+  </div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.1"></script><script src="/js/motion.js?v=7.4.1"></script>
+<script src="/js/schemes/muse.js?v=7.4.1"></script>
+
+<script src="/js/next-boot.js?v=7.4.1"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+  <script src="/js/local-search.js?v=7.4.1"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: true,
+    notify: false,
+    appId: 'mp5VWR22FVbxptY02BSSuWx3-9Nh9j0Va',
+    appKey: 'PeELbF0haXyi8VEMYzNIv6U0',
+    placeholder: "给作者留言并留下您的邮箱，作者稍后将会给您答复...",
+    avatar: 'mm',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: true,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: true,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>
