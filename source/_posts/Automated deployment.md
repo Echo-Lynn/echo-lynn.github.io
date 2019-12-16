@@ -78,7 +78,7 @@ DO IT YOURSELF
 
 2. 使用 Github 账号登录 Travis CI，授权
 
-3. 打开 Travis CI 个人页 https://travis-ci.com/account/repositories]
+3. 打开 Travis CI 个人页 [https://travis-ci.com/account/repositories]
 
 4. 点击Activate
 
