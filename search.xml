@@ -71,8 +71,9 @@
 <li>remote 拉取 DEPLOY-PROD 分支下的文件</li>
 <li>执行启动脚本 <code>yarn start</code> 启动服务</li>
 </ul>
-<p>笔者以往管理 Node 服务进程常用的一个工具为 </p>
+<p>笔者以往管理 Node 服务进程常用的一个工具为<br><a href="https://pm2.keymetrics.io/" target="_blank" rel="noopener">PM2</a></p>
 <p>近期在鼓捣自己的服务器经常查阅 PM2 文档时无意间发现了 <code>pm2 deploy</code> 的API，如获至宝 </p>
+<p><a href="https://pm2.keymetrics.io/docs/usage/deployment/" target="_blank" rel="noopener">DEPLOYMENT</a></p>
 <p>废话不多说， 列举下利用 <code>pm2 deploy</code>的构建机器需要哪些前提条件:</p>
 <ol>
 <li>装有 pm2 （还说不废话）</li>
@@ -126,8 +127,9 @@
 </li>
 </ol>
 <h2 id="配置-pm2"><a href="#配置-pm2" class="headerlink" title="配置 pm2"></a>配置 pm2</h2><p>解决了仓库拉取的问题后，我们正式进入部署配置的阶段</p>
+<p><a href="https://pm2.keymetrics.io/docs/usage/deployment/" target="_blank" rel="noopener">DEPLOYMENT</a></p>
 <p>参考 pm2 deployment 的相关文档，根据我们实际的需求来编写 pm2 的配置文件，项目根目录下</p>
-<figure class="highlight"><table><tr><td class="code"><pre><span class="line">vim ecosystem.config.js</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">vim ecosystem.config.js</span><br></pre></td></tr></table></figure>
 
 <figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">// ecosystem.config.js</span></span><br><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  apps: [</span><br><span class="line">    &#123;</span><br><span class="line">      name: <span class="string">'da_prod'</span>,</span><br><span class="line">      script: <span class="string">'yarn'</span>,</span><br><span class="line">      args: <span class="string">'run start'</span></span><br><span class="line">    &#125;</span><br><span class="line">  ],</span><br><span class="line">  deploy: &#123;</span><br><span class="line">    <span class="comment">// "prod" is the environment name</span></span><br><span class="line">    prod: &#123;</span><br><span class="line">      user: <span class="string">'root'</span>,</span><br><span class="line">      key: <span class="string">'~/.ssh/id_rsa'</span>,</span><br><span class="line">      host: [<span class="string">'$YOUR_REMOTE_IP'</span>],</span><br><span class="line">      ssh_options: <span class="string">'StrictHostKeyChecking=no'</span>,</span><br><span class="line">      <span class="comment">// 拉取部署分支</span></span><br><span class="line">      ref: <span class="string">'origin/DEPLOY-PROD'</span>,</span><br><span class="line">      <span class="comment">// 仓库地址</span></span><br><span class="line">      repo: <span class="string">'git@github.com:Echo-Lynn/demo-for-automated-deployment.git'</span>,</span><br><span class="line">      <span class="comment">// 部署 remote 路径</span></span><br><span class="line">      path: <span class="string">'/data/www/demo-for-automated-deployment'</span>,</span><br><span class="line">      <span class="string">'post-deploy'</span>: <span class="string">'.  /root/.nvm/nvm.sh &amp;&amp; yarn install &amp;&amp; pm2 reload ecosystem.config.js'</span></span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -147,7 +149,8 @@
 
 <p>验证进程是否成功启动，服务是否能够访问得到</p>
 <h1 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h1><p>本次分享的内容就到此结束了。由于构建和部署本身就是比较综合性的应用，涉及的知识范围比较广，对动手能力和调试排除能力都有较高的要求，实际操作起来可能由于各种环境的不尽相同也会产生一些不顺利的体验，但这些其实都不重要，重要的是供大家参考的这个部署思路，条条大路通罗马，具体怎么设计策略要看手上的资源和场景需求。</p>
-<h1 id="DEMO地址"><a href="#DEMO地址" class="headerlink" title="DEMO地址"></a>DEMO地址</h1>]]></content>
+<h1 id="DEMO地址"><a href="#DEMO地址" class="headerlink" title="DEMO地址"></a>DEMO地址</h1><p><a href="https://github.com/Echo-Lynn/demo-for-automated-deployment" target="_blank" rel="noopener">仓库链接</a><br><a href="https://blog.echo-lynn.com/">笔者博客地址</a></p>
+]]></content>
       <categories>
         <category>Deployment</category>
         <category>Automated deployment</category>
