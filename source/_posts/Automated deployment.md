@@ -203,7 +203,7 @@ deploy:
    sudo: false
    language: node_js
    node_js:
-   - 12
+     - 12
    cache: yarn
    branches:
      only:
@@ -215,13 +215,13 @@ deploy:
      #将生产服务器地址加入到构建机的信任列表中，否则连接时会询问是否信任服务器
      - echo -e "Host $PROD_SERVER_IP\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
    install:
-   - yarn install
+     - yarn install
    script:
-   - yarn build
+     - yarn build
    after_success:
-   - mkdir dist
-   - cp -r .next/ dist/.next
-   - cp package.json dist
+     - mkdir dist
+     - cp -r .next/ dist/.next
+     - cp package.json dist
    deploy:
      provider: pages
      skip_cleanup: true
@@ -323,14 +323,14 @@ module.exports = {
 
 ```yaml
 install:
-	- yarn add global pm2
+  - yarn add global pm2
   - yarn install
 after_success:
   - mkdir dist
   - cp -r .next/ dist/.next
   - cp package.json ecosystem.config.js dist
 after_deploy:
-	- pm2 deploy pm2.config.js prod setup --force
+  - pm2 deploy pm2.config.js prod setup --force
 ```
 
 第一次使用 `setup` 建立部署环境
@@ -341,7 +341,7 @@ after_deploy:
 
 ```yaml
 after_deploy:
-	- pm2 deploy pm2.config.js prod update --force
+  - pm2 deploy pm2.config.js prod update --force
 ```
 
 提交代码到 Github，等待构建完成
