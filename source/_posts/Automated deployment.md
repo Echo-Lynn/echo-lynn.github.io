@@ -207,7 +207,7 @@ deploy:
    cache: yarn
    branches:
      only:
-     - master
+       - master
    before_install:
      - openssl aes-256-cbc -K $encrypted_db8d9b5ea11f_key -iv $encrypted_db8d9b5ea11f_iv -in id_rsa.enc -out ~/.ssh/id_rsa -d
      #降低id_rsa文件的权限，否则ssh处于安全方面的原因会拒绝读取秘钥
