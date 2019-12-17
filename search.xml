@@ -258,7 +258,7 @@
 <li>有一定的前端工程化、自动化部署的经验</li>
 </ul>
 <p>正文开始时，也就默认了有缘阅读到此文的同学均具备上述能力</p>
-<p>原文地址：<a href="https://echo-lynn.github.io/Programming/JavaScript/Next.js%20with%20TypeScript%20and%20Mobx/" target="_blank" rel="noopener"><strong>Echo Lynn’s Blog</strong></a></p>
+<p>仓库地址：<a href="https://github.com/Echo-Lynn/nextjs-mobx-typescript" target="_blank" rel="noopener"><strong>nextjs-mobx-typescript</strong></a><br>demo预览地址： <a href="https://d.echo-lynn.com" target="_blank" rel="noopener"><strong>d.echo-lynn.com</strong></a><br>原文地址：<a href="https://echo-lynn.github.io/Programming/JavaScript/Next.js%20with%20TypeScript%20and%20Mobx/" target="_blank" rel="noopener"><strong>Echo Lynn’s Blog</strong></a></p>
 <p>作者将在原文上持续分享关于Next.js的高级拓展经验，有兴趣的朋友也可以在博客上留言你遇到的问题或者与作者交流</p>
 <a id="more"></a>
 
