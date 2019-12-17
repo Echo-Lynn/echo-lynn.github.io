@@ -153,13 +153,12 @@ deploy:
 - remote 拉取 DEPLOY-PROD 分支下的文件
 - 执行启动脚本 `yarn start` 启动服务
 
-笔者以往管理 Node 服务进程常用的一个工具为 
-
-[PM2]: https://pm2.keymetrics.io/
+笔者以往管理 Node 服务进程常用的一个工具为
+[PM2](https://pm2.keymetrics.io/)
 
 近期在鼓捣自己的服务器经常查阅 PM2 文档时无意间发现了 `pm2 deploy` 的API，如获至宝 
 
-[DEPLOYMENT]: https://pm2.keymetrics.io/docs/usage/deployment/
+[DEPLOYMENT](https://pm2.keymetrics.io/docs/usage/deployment/)
 
 废话不多说， 列举下利用 `pm2 deploy`的构建机器需要哪些前提条件:
 
@@ -278,11 +277,11 @@ deploy:
 
 解决了仓库拉取的问题后，我们正式进入部署配置的阶段
 
-[DEPLOYMENT]: https://pm2.keymetrics.io/docs/usage/deployment/
+[DEPLOYMENT](https://pm2.keymetrics.io/docs/usage/deployment/)
 
 参考 pm2 deployment 的相关文档，根据我们实际的需求来编写 pm2 的配置文件，项目根目录下
 
-```json
+```bash
 vim ecosystem.config.js
 ```
 
@@ -362,6 +361,6 @@ curl http://localhost:3000
 
 # DEMO地址
 
-[仓库链接]: https://github.com/Echo-Lynn/demo-for-automated-deployment
-[笔者博客地址]: https://blog.echo-lynn.com/
+[仓库链接](https://github.com/Echo-Lynn/demo-for-automated-deployment)
+[笔者博客地址](https://blog.echo-lynn.com/)
 

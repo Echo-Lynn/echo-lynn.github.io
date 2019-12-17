@@ -288,14 +288,13 @@ wechat_subscriber:
 reward_settings:
   # If true, reward would be displayed in every article by default.
   # You can show or hide reward in a specific article throuth `reward: true | false` in Front-matter.
-  enable: false
+  enable: true
   animation: false
-  #comment: Donate comment here.
+  comment: ⬇️⬇️⬇️🧧🧧🧧⬇️⬇️⬇️
 
 reward:
-  #wechatpay: /images/wechatpay.png
-  #alipay: /images/alipay.png
-  #bitcoin: /images/bitcoin.png
+  wechatpay: /images/wechatpay.jpg
+  alipay: /images/alipay.jpg
 
 # Related popular posts
 # Dependencies: https://github.com/tea3/hexo-related-popular-posts
