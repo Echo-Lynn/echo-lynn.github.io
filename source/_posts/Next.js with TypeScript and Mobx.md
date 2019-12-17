@@ -19,6 +19,8 @@ categories:
 
 正文开始时，也就默认了有缘阅读到此文的同学均具备上述能力
 
+仓库地址：[**nextjs-mobx-typescript**](https://github.com/Echo-Lynn/nextjs-mobx-typescript)
+demo预览地址： [**d.echo-lynn.com**](https://d.echo-lynn.com)
 原文地址：[**Echo Lynn's Blog**](https://echo-lynn.github.io/Programming/JavaScript/Next.js%20with%20TypeScript%20and%20Mobx/)
 
 作者将在原文上持续分享关于Next.js的高级拓展经验，有兴趣的朋友也可以在博客上留言你遇到的问题或者与作者交流
