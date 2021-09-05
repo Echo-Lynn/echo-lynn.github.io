@@ -55,7 +55,7 @@ pm2 -v
 
 # 源码准备
 
-因为是教程，就一切从简了，这里以一个最小的 Next.js 应用为例
+一切从简了，这里以一个最小的 Next.js 应用为例
 
 ```bash
 npx create-next-app
